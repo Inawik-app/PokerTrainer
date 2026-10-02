@@ -1,3 +1,6 @@
+import { ui } from "@/content/wording";
+import { primaryLabel, terms, type VocabMode } from "@/content/wording";
+
 /** Format helpers for French UI. */
 
 export function formatChips(n: number): string {
@@ -25,40 +28,40 @@ export function formatCard(rank: string, suit: string): string {
   return `${rankFr[rank] ?? rank}${suitSym[suit] ?? suit}`;
 }
 
-export function formatAction(
-  action: string,
-  amount: number,
-): string {
+export function formatAction(action: string, amount: number): string {
   switch (action) {
     case "fold":
-      return "se couche";
+      return ui.actionFold;
     case "check":
-      return "parole";
+      return ui.actionCheck;
     case "call":
-      return `suit ${formatChips(amount)}`;
+      return ui.actionCall(formatChips(amount));
     case "bet":
-      return `mise ${formatChips(amount)}`;
+      return ui.actionBet(formatChips(amount));
     case "raise":
-      return `relance à ${formatChips(amount)}`;
+      return ui.actionRaise(formatChips(amount));
     case "all-in":
-      return `tapis ${formatChips(amount)}`;
+      return ui.actionAllIn(formatChips(amount));
     default:
       return action;
   }
 }
 
-export function streetLabel(street: string): string {
+export function streetLabel(
+  street: string,
+  mode: VocabMode = "simple",
+): string {
   switch (street) {
     case "preflop":
-      return "Préflop";
+      return primaryLabel(terms.preflop, mode);
     case "flop":
-      return "Flop";
+      return primaryLabel(terms.flop, mode);
     case "turn":
-      return "Turn";
+      return primaryLabel(terms.turn, mode);
     case "river":
-      return "River";
+      return primaryLabel(terms.river, mode);
     case "showdown":
-      return "Showdown";
+      return primaryLabel(terms.showdown, mode);
     default:
       return street;
   }

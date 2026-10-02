@@ -10,7 +10,7 @@ import {
   type GameEvent,
   type GameState,
 } from "@/engine";
-import { createRng, type Rng } from "@/lib/rng";
+import { createRng, resolveGameSeed, type Rng } from "@/lib/rng";
 import {
   decideAction,
   type BotConfig,
@@ -27,7 +27,8 @@ export type GameSettings = {
   bigBlind: number;
   botDelayMin: number;
   botDelayMax: number;
-  seed: number;
+  /** If set, every new game uses this seed. Null = fresh crypto seed each game. */
+  manualSeed: number | null;
 };
 
 const STYLES: BotStyle[] = [
@@ -41,12 +42,14 @@ const DIFFS: BotDifficulty[] = ["EASY", "MEDIUM", "HARD"];
 
 type Store = {
   settings: GameSettings;
+  /** Seed actually used for the current (or last) game. */
+  gameSeed: number | null;
   gameState: GameState | null;
   events: GameEvent[];
   phase: GamePhase;
   botConfigs: Record<string, BotConfig>;
   heroId: string;
-  rng: Rng;
+  rng: Rng | null;
   botTimer: ReturnType<typeof setTimeout> | null;
   setSettings: (partial: Partial<GameSettings>) => void;
   startGame: () => void;
@@ -56,7 +59,7 @@ type Store = {
 };
 
 function scheduleBot(get: () => Store, set: (p: Partial<Store>) => void) {
-  const { gameState, settings, botConfigs, heroId, clearBotTimer } = get();
+  const { gameState, settings, botConfigs, heroId, clearBotTimer, rng } = get();
   clearBotTimer();
   if (!gameState || gameState.handOver || gameState.actingIndex === null) {
     if (gameState?.handOver) set({ phase: "handOver" });
@@ -64,17 +67,18 @@ function scheduleBot(get: () => Store, set: (p: Partial<Store>) => void) {
   }
   const actor = gameState.players[gameState.actingIndex]!;
   if (actor.id === heroId) return;
+  if (!rng) return;
 
-  const delay =
-    settings.botDelayMin +
-    Math.floor(
-      Math.random() * (settings.botDelayMax - settings.botDelayMin + 1),
-    );
+  const span = settings.botDelayMax - settings.botDelayMin + 1;
+  const delay = settings.botDelayMin + rng.int(Math.max(1, span));
 
   const timer = setTimeout(() => {
     const current = get();
     const state = current.gameState;
-    if (!state || state.handOver || state.actingIndex === null) return;
+    const currentRng = current.rng;
+    if (!state || !currentRng || state.handOver || state.actingIndex === null) {
+      return;
+    }
     const bot = state.players[state.actingIndex]!;
     if (bot.id === current.heroId) return;
 
@@ -92,7 +96,7 @@ function scheduleBot(get: () => Store, set: (p: Partial<Store>) => void) {
         holeCards: p.id === bot.id ? p.holeCards : null,
       })),
     };
-    const action = decideAction(view, legal, config, current.rng);
+    const action = decideAction(view, legal, config, currentRng);
     try {
       const { state: next, events } = applyAction(state, action);
       set({
@@ -102,7 +106,6 @@ function scheduleBot(get: () => Store, set: (p: Partial<Store>) => void) {
       });
       scheduleBot(get, set);
     } catch {
-      // Try safe fallback
       try {
         const fallback = legal.check
           ? ({ type: "check" } as Action)
@@ -133,14 +136,15 @@ export const useGameStore = create<Store>((set, get) => ({
     bigBlind: 10,
     botDelayMin: 600,
     botDelayMax: 1200,
-    seed: 42,
+    manualSeed: null,
   },
+  gameSeed: null,
   gameState: null,
   events: [],
   phase: "idle",
   botConfigs: {},
   heroId: "hero",
-  rng: createRng(42),
+  rng: null,
   botTimer: null,
 
   clearBotTimer: () => {
@@ -155,7 +159,8 @@ export const useGameStore = create<Store>((set, get) => ({
   startGame: () => {
     const { settings, heroId, clearBotTimer } = get();
     clearBotTimer();
-    const rng = createRng(settings.seed);
+    const seed = resolveGameSeed(settings.manualSeed);
+    const rng = createRng(seed);
     const configs: Record<string, BotConfig> = {};
     const players = [
       { id: heroId, name: "Vous", stack: settings.startingStack },
@@ -179,6 +184,7 @@ export const useGameStore = create<Store>((set, get) => ({
     );
     state = startHand(state, rng);
     set({
+      gameSeed: seed,
       gameState: state,
       events: [...state.events],
       phase: state.handOver ? "handOver" : "playing",
@@ -207,7 +213,7 @@ export const useGameStore = create<Store>((set, get) => ({
 
   nextHand: () => {
     const { gameState, rng, clearBotTimer, events } = get();
-    if (!gameState) return;
+    if (!gameState || !rng) return;
     clearBotTimer();
     const next = startHand(gameState, rng);
     set({

@@ -1,2 +1,1 @@
-export {};
-
+export { Term, TermInline } from "./Term";

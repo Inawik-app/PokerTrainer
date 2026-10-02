@@ -5,7 +5,7 @@ describe("coach", () => {
   it("advises call when equity beats pot odds", () => {
     const advice = getAdvice(0.4, 25, 75, 9);
     expect(advice.level).toBe("good");
-    expect(advice.message).toMatch(/rentable/i);
+    expect(advice.message).toMatch(/bon|vaut le coup/i);
   });
 
   it("flags bad calls", () => {

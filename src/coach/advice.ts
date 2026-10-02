@@ -1,4 +1,6 @@
 import { callVerdict, type CallVerdict } from "@/odds";
+import { ui } from "@/content/wording";
+import { formatPercent } from "@/lib/format";
 
 export type Advice = {
   level: "good" | "careful" | "bad";
@@ -20,31 +22,32 @@ export function getAdvice(
   pot: number,
   outsCount: number,
 ): Advice {
+  const equityPct = formatPercent(equity, 0);
   if (toCall <= 0) {
     return {
       level: "good",
-      message: `Équité estimée ${(equity * 100).toFixed(0)} %. Pas de mise à suivre — parole ou valeur.`,
+      message: ui.adviceNoBet(equityPct),
     };
   }
   const required = toCall / (pot + toCall);
+  const requiredPct = formatPercent(required, 0);
   const verdict = callVerdict(equity, required);
-  const outsPart =
-    outsCount > 0 ? `Tu as ${outsCount} outs, environ ${(equity * 100).toFixed(0)} %. ` : "";
+  const outsPart = ui.outsPart(outsCount, equityPct);
   if (verdict === "good") {
     return {
       level: "good",
-      message: `${outsPart}Le pot demande ${(required * 100).toFixed(0)} %, suivre est rentable.`,
+      message: ui.adviceGood(outsPart, equityPct, requiredPct),
     };
   }
   if (verdict === "marginal") {
     return {
       level: "careful",
-      message: `${outsPart}Cote du pot ${(required * 100).toFixed(0)} % vs équité ${(equity * 100).toFixed(0)} % — décision limite.`,
+      message: ui.adviceCareful(outsPart, equityPct, requiredPct),
     };
   }
   return {
     level: "bad",
-    message: `${outsPart}Il faudrait ${(required * 100).toFixed(0)} % et tu n'as que ${(equity * 100).toFixed(0)} % — suivre est cher.`,
+    message: ui.adviceBad(outsPart, equityPct, requiredPct),
   };
 }
 
@@ -73,10 +76,10 @@ export function reviewHand(
       level,
       note:
         level === "bad"
-          ? "EV négative probable"
+          ? ui.reviewBad
           : level === "marginal"
-            ? "Décision limite"
-            : "Correct",
+            ? ui.reviewMarginal
+            : ui.reviewGood,
     };
   });
 }

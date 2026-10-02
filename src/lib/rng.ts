@@ -4,7 +4,26 @@ export type Rng = {
   shuffle: <T>(array: T[]) => T[];
 };
 
-/** Mulberry32 seeded PRNG. */
+/** Cryptographically random uint32 for game seeds. Only place Math/crypto randomness is allowed. */
+export function randomSeed(): number {
+  const buf = new Uint32Array(1);
+  crypto.getRandomValues(buf);
+  return buf[0]!;
+}
+
+/** Use a manual seed when provided, otherwise crypto. */
+export function resolveGameSeed(manualSeed: number | null | undefined): number {
+  if (
+    manualSeed != null &&
+    typeof manualSeed === "number" &&
+    Number.isFinite(manualSeed)
+  ) {
+    return manualSeed >>> 0;
+  }
+  return randomSeed();
+}
+
+/** Mulberry32 seeded PRNG. Fisher-Yates shuffle from end to start. */
 export function createRng(seed: number): Rng {
   let state = seed >>> 0;
 

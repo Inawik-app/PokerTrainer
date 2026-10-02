@@ -1,7 +1,7 @@
 "use client";
 
 import { getAdvice } from "@/coach";
-import { Term } from "@/ui/primitives/Term";
+import { ui } from "@/content/wording";
 import { cn } from "@/lib/utils";
 
 type Props = {
@@ -15,9 +15,7 @@ export function CoachPanel({ equity, toCall, pot, outsCount }: Props) {
   const advice = getAdvice(equity, toCall, pot, outsCount);
   return (
     <div className="space-y-2">
-      <h2 className="text-sm font-semibold text-text">
-        <Term id="ev">Coach</Term>
-      </h2>
+      <h2 className="text-sm font-semibold text-text">{ui.coachTitle}</h2>
       <div
         className={cn(
           "rounded-lg border border-border p-3 text-sm",

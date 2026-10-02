@@ -32,10 +32,18 @@
   --gold-muted: #8a7020;
   --gold-soft: color-mix(in srgb, var(--gold) 22%, transparent);
 
-  /* Status */
-  --success: #3d9a6a;
-  --warning: #d4a017;
-  --danger: #c44b4b;
+  /* Seat status */
+  --seat-acting-ring: var(--gold);
+  --seat-acting-glow: color-mix(in srgb, var(--gold) 45%, transparent);
+  --seat-folded-opacity: 0.4;
+  --seat-eliminated-opacity: 0.28;
+  --seat-winner-halo: color-mix(in srgb, var(--gold) 55%, transparent);
+  --seat-badge-folded: var(--text-muted);
+  --seat-badge-allin: var(--warning);
+  --seat-badge-turn: var(--gold);
+  --seat-action-bubble-bg: var(--surface-elevated);
+  --seat-action-bubble-text: var(--text);
+  --seat-timer: var(--gold);
 
   /* Playing cards */
   --card-face: #faf8f5;
@@ -55,14 +63,25 @@
   --suit-red: #c44b4b;
   --suit-black: #1a1d21;
 
-  /* Chips */
-  --chip-white: #e8e4d9;
-  --chip-red: #b83a3a;
-  --chip-blue: #2a4a7a;
-  --chip-green: #2d6b4f;
-  --chip-black: #1a1d21;
+  /* Chips — denominations */
+  --chip-1: #e8e4d9;
+  --chip-5: #c44b4b;
+  --chip-25: #2d7a52;
+  --chip-100: #1a1d21;
+  --chip-500: #6b3fa0;
+  --chip-1000: #c9a227;
+  --chip-5000: #d4782a;
   --chip-edge: #0f1114;
-  --chip-1: var(--chip-white);
+  --chip-label-bg: color-mix(in srgb, var(--surface) 82%, transparent);
+  --chip-label-text: var(--text);
+  --chip-highlight: color-mix(in srgb, #ffffff 35%, transparent);
+  --chip-shadow: 0 2px 4px rgba(0, 0, 0, 0.45);
+  /* legacy aliases */
+  --chip-white: var(--chip-1);
+  --chip-red: var(--chip-5);
+  --chip-green: var(--chip-25);
+  --chip-black: var(--chip-100);
+  --chip-blue: #2a4a7a;
 
   /* Radii */
   --radius: 0.75rem;
@@ -132,6 +151,18 @@
   --warning: #b8860b;
   --danger: #a83a3a;
 
+  --seat-acting-ring: var(--gold);
+  --seat-acting-glow: color-mix(in srgb, var(--gold) 40%, transparent);
+  --seat-folded-opacity: 0.4;
+  --seat-eliminated-opacity: 0.28;
+  --seat-winner-halo: color-mix(in srgb, var(--gold) 45%, transparent);
+  --seat-badge-folded: var(--text-muted);
+  --seat-badge-allin: var(--warning);
+  --seat-badge-turn: var(--gold);
+  --seat-action-bubble-bg: var(--surface-elevated);
+  --seat-action-bubble-text: var(--text);
+  --seat-timer: var(--gold);
+
   --card-face: #ffffff;
   --card-face-ink: #1a1d21;
   --card-back: #1a2740;
@@ -146,13 +177,23 @@
   --suit-red: #a83a3a;
   --suit-black: #1a1d21;
 
-  --chip-white: #f5f3ee;
-  --chip-red: #a83a3a;
-  --chip-blue: #2a4a7a;
-  --chip-green: #2d6b4f;
-  --chip-black: #1a1d21;
+  --chip-1: #f0ebe3;
+  --chip-5: #a83a3a;
+  --chip-25: #2d7a52;
+  --chip-100: #1a1d21;
+  --chip-500: #5a3290;
+  --chip-1000: #a8841a;
+  --chip-5000: #c06020;
   --chip-edge: #2a2d32;
-  --chip-1: var(--chip-black);
+  --chip-label-bg: color-mix(in srgb, var(--surface) 88%, transparent);
+  --chip-label-text: var(--text);
+  --chip-highlight: color-mix(in srgb, #ffffff 45%, transparent);
+  --chip-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  --chip-white: var(--chip-1);
+  --chip-red: var(--chip-5);
+  --chip-green: var(--chip-25);
+  --chip-black: var(--chip-100);
+  --chip-blue: #2a4a7a;
 
   --radius: 0.75rem;
   --radius-card: 0.375rem;

@@ -68,6 +68,12 @@
   --color-card-face: var(--card-face);
   --color-card-back: var(--card-back);
   --color-chip-1: var(--chip-1);
+  --color-chip-5: var(--chip-5);
+  --color-chip-25: var(--chip-25);
+  --color-chip-100: var(--chip-100);
+  --color-chip-500: var(--chip-500);
+  --color-chip-1000: var(--chip-1000);
+  --color-chip-5000: var(--chip-5000);
   --color-table-rail: var(--table-rail);
   --shadow-card: var(--shadow-card);
   --font-display: var(--font-display-family);

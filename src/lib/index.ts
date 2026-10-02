@@ -1,4 +1,4 @@
-export { createRng, type Rng } from "./rng";
+export { createRng, randomSeed, resolveGameSeed, type Rng } from "./rng";
 export { cn } from "./utils";
 export {
   formatChips,

@@ -6,6 +6,8 @@ import { useGameStore } from "@/store";
 import { Button } from "@/components/ui/button";
 import { Slider } from "@/components/ui/slider";
 import { formatChips } from "@/lib/format";
+import { ui, primaryLabel, terms } from "@/content/wording";
+import { useVocab } from "@/ui/hooks/useVocab";
 
 export function ActionBar() {
   const gameState = useGameStore((s) => s.gameState);
@@ -13,6 +15,7 @@ export function ActionBar() {
   const phase = useGameStore((s) => s.phase);
   const humanAction = useGameStore((s) => s.humanAction);
   const nextHand = useGameStore((s) => s.nextHand);
+  const { mode } = useVocab();
 
   const legal = useMemo(() => {
     if (!gameState) return null;
@@ -36,7 +39,7 @@ export function ActionBar() {
     return (
       <div className="flex justify-center gap-3 border-t border-border bg-surface-2 p-4">
         <Button size="lg" onClick={nextHand}>
-          Main suivante
+          {ui.nextHand}
         </Button>
       </div>
     );
@@ -45,7 +48,7 @@ export function ActionBar() {
   if (!isHeroTurn || !legal || !gameState) {
     return (
       <div className="border-t border-border bg-surface-2 p-4 text-center text-sm text-text-muted">
-        En attente des bots…
+        {ui.waitingBots}
       </div>
     );
   }
@@ -64,7 +67,11 @@ export function ActionBar() {
       {raiseOrBet && (
         <div className="mx-auto flex w-full max-w-xl flex-col gap-2">
           <div className="flex items-center justify-between text-sm text-text-muted">
-            <span>{legal.raise ? "Relancer à" : "Miser"}</span>
+            <span>
+              {legal.raise
+                ? ui.raiseTo
+                : primaryLabel(terms.bet, mode)}
+            </span>
             <span className="font-mono tabular-nums text-text">
               {formatChips(raiseTo)}
             </span>
@@ -80,33 +87,39 @@ export function ActionBar() {
           />
           <div className="flex flex-wrap gap-2">
             <Button variant="outline" size="sm" onClick={() => setFraction(0.5)}>
-              ½ pot
+              {ui.halfPot}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setFraction(0.75)}>
-              ¾ pot
+              {ui.threeQuarterPot}
             </Button>
             <Button variant="outline" size="sm" onClick={() => setFraction(1)}>
-              Pot
+              {ui.fullPot}
             </Button>
             <Button
               variant="outline"
               size="sm"
               onClick={() => setRaiseTo(raiseOrBet.max)}
             >
-              Tapis ({formatChips(hero.stack)})
+              {ui.allInWith(formatChips(hero.stack))}
             </Button>
           </div>
         </div>
       )}
       <div className="flex flex-wrap items-center justify-center gap-2">
         {legal.fold && (
-          <Button variant="destructive" onClick={() => humanAction({ type: "fold" })}>
-            Se coucher
+          <Button
+            variant="destructive"
+            onClick={() => humanAction({ type: "fold" })}
+          >
+            {primaryLabel(terms.fold, mode)}
           </Button>
         )}
         {legal.check && (
-          <Button variant="secondary" onClick={() => humanAction({ type: "check" })}>
-            Parole
+          <Button
+            variant="secondary"
+            onClick={() => humanAction({ type: "check" })}
+          >
+            {primaryLabel(terms.check, mode)}
           </Button>
         )}
         {legal.call && (
@@ -114,21 +127,19 @@ export function ActionBar() {
             variant="secondary"
             onClick={() => humanAction({ type: "call" })}
           >
-            Suivre {formatChips(legal.call.amount)}
+            {ui.callAmount(formatChips(legal.call.amount))}
           </Button>
         )}
         {legal.bet && (
-          <Button
-            onClick={() => humanAction({ type: "bet", amount: raiseTo })}
-          >
-            Miser {formatChips(raiseTo)}
+          <Button onClick={() => humanAction({ type: "bet", amount: raiseTo })}>
+            {ui.betAmountBtn(formatChips(raiseTo))}
           </Button>
         )}
         {legal.raise && (
           <Button
             onClick={() => humanAction({ type: "raise", amount: raiseTo })}
           >
-            Relancer à {formatChips(raiseTo)}
+            {ui.raiseAmountBtn(formatChips(raiseTo))}
           </Button>
         )}
       </div>

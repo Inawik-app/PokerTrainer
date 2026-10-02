@@ -5,22 +5,69 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { glossary, type GlossaryId } from "@/content/glossary";
+import {
+  primaryLabel,
+  secondaryLabel,
+  terms,
+  type WordingTermId,
+} from "@/content/wording";
+import { useVocab } from "@/ui/hooks/useVocab";
+import { cn } from "@/lib/utils";
 
 type Props = {
-  id: GlossaryId;
-  children: React.ReactNode;
+  id: WordingTermId;
+  /** Override displayed primary text. */
+  children?: React.ReactNode;
+  className?: string;
+  /** Show secondary technical/simple label underneath. */
+  showSecondary?: boolean;
 };
 
-export function Term({ id, children }: Props) {
-  const entry = glossary[id];
+export function Term({
+  id,
+  children,
+  className,
+  showSecondary = true,
+}: Props) {
+  const { mode } = useVocab();
+  const entry = terms[id];
+  const primary = children ?? primaryLabel(entry, mode);
+  const secondary = secondaryLabel(entry, mode);
+
+  return (
+    <span className={cn("inline-flex flex-col items-start gap-0.5", className)}>
+      <span className="text-text">{primary}</span>
+      {showSecondary && (
+        <Tooltip>
+          <TooltipTrigger className="cursor-help border-b border-dotted border-text-muted text-[11px] leading-tight text-text-muted">
+            {secondary}
+          </TooltipTrigger>
+          <TooltipContent className="max-w-xs text-sm">
+            <strong>{entry.poker}</strong> — {entry.tip}
+          </TooltipContent>
+        </Tooltip>
+      )}
+    </span>
+  );
+}
+
+/** Inline term used as a single underlined word (no secondary line). */
+export function TermInline({
+  id,
+  children,
+}: {
+  id: WordingTermId;
+  children?: React.ReactNode;
+}) {
+  const { mode } = useVocab();
+  const entry = terms[id];
   return (
     <Tooltip>
       <TooltipTrigger className="cursor-help border-b border-dotted border-text-muted">
-        {children}
+        {children ?? primaryLabel(entry, mode)}
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-sm">
-        <strong>{entry.term}</strong> — {entry.definition}
+        <strong>{entry.poker}</strong> — {entry.tip}
       </TooltipContent>
     </Tooltip>
   );

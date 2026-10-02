@@ -8,8 +8,18 @@ import { ActionBar } from "@/ui/controls/ActionBar";
 import { SettingsDialog } from "@/ui/controls/SettingsDialog";
 import { OddsPanel } from "@/ui/panels/OddsPanel";
 import { ActionLog } from "@/ui/panels/ActionLog";
+import { VocabProvider } from "@/ui/hooks/useVocab";
+import { ui } from "@/content/wording";
 
 export function GameScreen() {
+  return (
+    <VocabProvider>
+      <GameScreenInner />
+    </VocabProvider>
+  );
+}
+
+function GameScreenInner() {
   const phase = useGameStore((s) => s.phase);
   const startGame = useGameStore((s) => s.startGame);
   const settings = useGameStore((s) => s.settings);
@@ -19,23 +29,22 @@ export function GameScreen() {
       <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-surface px-6">
         <div className="text-center">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-            Poker Trainer
+            {ui.appTitle}
           </h1>
           <p className="mt-3 max-w-md text-text-muted">
-            Entraînez-vous au Texas Hold&apos;em No-Limit contre{" "}
-            {settings.botCount} bots, avec aides et conseils.
+            {ui.appTagline(settings.botCount)}
           </p>
         </div>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Button size="lg" onClick={startGame}>
-            Nouvelle partie
+            {ui.newGame}
           </Button>
           <SettingsDialog />
           <Link
             href="/regles"
             className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm text-text"
           >
-            Règles
+            {ui.rules}
           </Link>
         </div>
       </main>
@@ -46,18 +55,18 @@ export function GameScreen() {
     <main className="flex min-h-full flex-1 flex-col bg-surface">
       <header className="flex items-center justify-between border-b border-border px-4 py-3">
         <h1 className="font-display text-lg font-semibold text-text">
-          Poker Trainer
+          {ui.appTitle}
         </h1>
         <div className="flex items-center gap-2">
           <Link
             href="/regles"
             className="inline-flex h-8 items-center rounded-lg border border-border px-3 text-sm text-text"
           >
-            Règles
+            {ui.rules}
           </Link>
           <SettingsDialog />
           <Button variant="outline" size="sm" onClick={startGame}>
-            Recommencer
+            {ui.restart}
           </Button>
         </div>
       </header>
@@ -69,7 +78,10 @@ export function GameScreen() {
           <section data-panel="odds">
             <OddsPanel />
           </section>
-          <section data-panel="log" className="min-h-[180px] flex-1 border-t border-border pt-4">
+          <section
+            data-panel="log"
+            className="min-h-[180px] flex-1 border-t border-border pt-4"
+          >
             <ActionLog />
           </section>
         </aside>
