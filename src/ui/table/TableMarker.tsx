@@ -30,7 +30,7 @@ const TIPS: Record<MarkerKind, (amount: number) => string> = {
 export function TableMarker({ kind, amount = 0, className }: Props) {
   const id = useId();
   const reduce = useReducedMotion();
-  const size = kind === "dealer" ? 36 : 30;
+  const size = kind === "dealer" ? 34 : 28;
   const fill =
     kind === "dealer"
       ? "var(--marker-dealer-bg)"
@@ -44,7 +44,6 @@ export function TableMarker({ kind, amount = 0, className }: Props) {
         ? "var(--marker-sb-ink)"
         : "var(--marker-bb-ink)";
   const label = kind === "dealer" ? "D" : kind === "sb" ? "PB" : "GB";
-  const extraH = kind === "dealer" ? 0 : 14;
 
   return (
     <Tooltip>
@@ -63,8 +62,8 @@ export function TableMarker({ kind, amount = 0, className }: Props) {
       >
         <svg
           width={size}
-          height={size + extraH}
-          viewBox={`0 0 ${size} ${size + extraH}`}
+          height={size}
+          viewBox={`0 0 ${size} ${size}`}
           aria-label={TIPS[kind](amount)}
           role="img"
         >
@@ -86,24 +85,12 @@ export function TableMarker({ kind, amount = 0, className }: Props) {
             x={size / 2}
             y={size / 2 + 4}
             textAnchor="middle"
-            fontSize={kind === "dealer" ? 14 : 9}
+            fontSize={kind === "dealer" ? 13 : 9}
             fontWeight={800}
             fill={ink}
           >
             {label}
           </text>
-          {kind !== "dealer" && (
-            <text
-              x={size / 2}
-              y={size + 10}
-              textAnchor="middle"
-              fontSize={8}
-              fontWeight={600}
-              fill="var(--text)"
-            >
-              {formatChips(amount)}
-            </text>
-          )}
         </svg>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs text-sm">

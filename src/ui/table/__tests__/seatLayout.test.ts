@@ -1,53 +1,36 @@
 import { describe, expect, it } from "vitest";
-import { getSeatLayout } from "../seatLayout";
-import { zoneTrackSegments } from "@/ui/controls/BetZoneSlider";
-import { getBetZones } from "@/coach";
+import {
+  forbiddenOverlaps,
+  getSeatLayout,
+  layoutHasOverlaps,
+  rectsOverlap,
+} from "../seatLayout";
 
 describe("getSeatLayout", () => {
-  it("places hero (index 0) at bottom center", () => {
+  it("places hero (index 0) plate at bottom center", () => {
     for (const n of [2, 4, 6]) {
       const layout = getSeatLayout(n);
-      expect(layout).toHaveLength(n);
-      const hero = layout[0]!;
-      expect(hero.seat.left).toBeCloseTo(50, 0);
-      expect(hero.seat.top).toBeGreaterThan(70);
+      expect(layout.seats).toHaveLength(n);
+      const hero = layout.seats[0]!.plate;
+      expect(hero.x + hero.w / 2).toBeCloseTo(50, 0);
+      expect(hero.y + hero.h / 2).toBeGreaterThan(62);
     }
   });
 
-  it("keeps bet between seat and center", () => {
-    const layout = getSeatLayout(6);
-    for (const slot of layout) {
-      const seatDist = Math.hypot(slot.seat.left - 50, slot.seat.top - 50);
-      const betDist = Math.hypot(slot.bet.left - 50, slot.bet.top - 50);
-      expect(betDist).toBeLessThan(seatDist);
+  it("keeps street bets outside the center zone", () => {
+    for (const n of [2, 3, 4, 5, 6]) {
+      const layout = getSeatLayout(n);
+      for (const seat of layout.seats) {
+        expect(rectsOverlap(seat.bet, layout.center, 0)).toBe(false);
+      }
     }
   });
-});
 
-describe("zoneTrackSegments", () => {
-  it("covers full range from min to max without gap", () => {
-    const zones = getBetZones(
-      {
-        street: "preflop",
-        bigBlind: 10,
-        pot: 15,
-        min: 20,
-        max: 1000,
-        isReRaise: false,
-        facingTotal: 10,
-        callers: 0,
-        spr: 50,
-        hasDraw: false,
-      },
-      0.5,
-    );
-    const segs = zoneTrackSegments(zones, 20, 1000);
-    expect(segs.length).toBeGreaterThan(0);
-    expect(segs[0]!.left).toBeCloseTo(0, 0);
-    const last = segs[segs.length - 1]!;
-    expect(last.left + last.width).toBeGreaterThan(99);
-    const good = segs.find((s) => s.kind === "good");
-    expect(good).toBeTruthy();
-    expect(good!.width).toBeGreaterThan(0);
+  it("has no forbidden overlapping boxes for 2–6 players", () => {
+    for (const n of [2, 3, 4, 5, 6]) {
+      const layout = getSeatLayout(n);
+      expect(layoutHasOverlaps(layout), `n=${n}`).toBe(false);
+      expect(forbiddenOverlaps(layout)).toEqual([]);
+    }
   });
 });

@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import {
-  AnimatePresence,
-  LayoutGroup,
-  motion,
-  useReducedMotion,
-} from "framer-motion";
+import { AnimatePresence, LayoutGroup, motion, useReducedMotion } from "framer-motion";
 import { computePots, evaluateHand, type GameEvent } from "@/engine";
 import { useGameStore } from "@/store";
 import { Board } from "./Board";
 import { Pot } from "./Pot";
 import { Seat, type SeatVisualState } from "./Seat";
+import { SeatBotCards } from "./SeatBotCards";
+import { TableBet } from "./TableBet";
 import { TableMarker } from "./TableMarker";
-import { getSeatLayout, pct } from "./seatLayout";
-import { ChipStack } from "@/ui/cards/ChipStack";
+import {
+  getSeatLayout,
+  markerBoxForCount,
+  rectStyle,
+} from "./seatLayout";
 import { formatAction, formatChips, streetLabel } from "@/lib/format";
 import { ui } from "@/content/wording";
 import { useVocab } from "@/ui/hooks/useVocab";
@@ -194,13 +194,14 @@ export function Table() {
       ? heroHandLabel(hero.holeCards, gameState.board)
       : null;
 
+  const centerStyle = rectStyle(layout.center);
+
   return (
     <LayoutGroup id="table-markers">
       <div
         className="relative mx-auto h-full w-full max-h-full"
         style={{ aspectRatio: "2 / 1", maxWidth: "min(100%, 1100px)" }}
       >
-        {/* Stadium felt */}
         <div
           className="absolute inset-[4%] border-8 shadow-card"
           style={{
@@ -210,10 +211,12 @@ export function Table() {
           }}
         />
 
-        {/* Center column */}
-        <div className="absolute left-1/2 top-[18%] z-[5] flex w-[70%] max-w-lg -translate-x-1/2 flex-col items-center gap-1.5">
+        <div
+          className="absolute z-[5] flex flex-col items-center justify-center gap-1.5 overflow-hidden"
+          style={centerStyle}
+        >
           {handName && (
-            <p className="text-[11px] font-medium text-text-muted">
+            <p className="text-center text-[11px] font-medium text-text-muted">
               {ui.yourHand(handName)}
             </p>
           )}
@@ -222,7 +225,7 @@ export function Table() {
             amount={gameState.pot}
             pots={sidePots.length > 0 ? sidePots : undefined}
           />
-          <p className="text-[11px] text-text-muted">
+          <p className="text-center text-[11px] text-text-muted">
             {streetLabel(gameState.street, mode)}
             <span className="mx-1.5 opacity-40">·</span>
             {ui.playersInHand(inHandCount)}
@@ -230,10 +233,7 @@ export function Table() {
         </div>
 
         {ordered.map((player, i) => {
-          const slot = layout[i]!;
-          const seatPos = pct(slot.seat);
-          const betPos = pct(slot.bet);
-          const markPos = pct(slot.marker);
+          const slot = layout.seats[i]!;
           const faceUp =
             player.id === heroId ||
             gameState.street === "showdown" ||
@@ -250,24 +250,57 @@ export function Table() {
           const isBtn = player.seat === gameState.buttonSeat;
           const isSB = player.seat === sbSeat;
           const isBB = player.seat === bbSeat;
+          const isHero = player.id === heroId;
+          const showBotCards =
+            !isHero &&
+            visualState !== "folded" &&
+            visualState !== "eliminated";
+          const revealed =
+            faceUp &&
+            player.holeCards.length > 0 &&
+            visualState !== "folded" &&
+            visualState !== "eliminated";
+
+          const markerCount =
+            (isBtn ? 1 : 0) + (isSB ? 1 : 0) + (isBB ? 1 : 0);
+          const markerRect =
+            markerCount > 0
+              ? markerBoxForCount(
+                  slot.plate,
+                  markerCount >= 2 ? 2 : 1,
+                  slot.bet,
+                )
+              : null;
 
           return (
             <div key={player.id}>
+              {showBotCards && slot.cards && (
+                <div
+                  className="absolute z-[7] overflow-visible"
+                  style={rectStyle(slot.cards)}
+                >
+                  <SeatBotCards
+                    cards={
+                      revealed
+                        ? player.holeCards
+                        : [null, null]
+                    }
+                    revealed={revealed}
+                    handId={gameState.handNumber}
+                    playerId={player.id}
+                  />
+                </div>
+              )}
+
               <div
-                className="absolute z-[8] -translate-x-1/2 -translate-y-1/2"
-                style={{ left: seatPos.left, top: seatPos.top }}
+                className="absolute z-[8]"
+                style={rectStyle(slot.plate)}
               >
                 <Seat
                   player={player}
-                  isHero={player.id === heroId}
+                  isHero={isHero}
                   visualState={visualState}
                   handId={gameState.handNumber}
-                  showCards={
-                    faceUp &&
-                    player.holeCards.length > 0 &&
-                    visualState !== "folded" &&
-                    visualState !== "eliminated"
-                  }
                   styleCode={cfg?.style}
                   difficulty={cfg?.difficulty}
                   actionBubble={bubble}
@@ -276,16 +309,18 @@ export function Table() {
                 />
               </div>
 
-              {(isBtn || isSB || isBB) && (
+              {markerRect && markerCount > 0 && (
                 <div
-                  className="absolute z-[9] -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: markPos.left, top: markPos.top }}
+                  className="absolute z-[9] flex items-end justify-start gap-0.5"
+                  style={rectStyle(markerRect)}
                 >
-                  <div className="flex items-center gap-0.5">
-                    {isBtn && <TableMarker kind="dealer" />}
-                    {isSB && <TableMarker kind="sb" amount={sbAmount} />}
-                    {isBB && <TableMarker kind="bb" amount={bbAmount} />}
-                  </div>
+                  {isBtn && <TableMarker kind="dealer" />}
+                  {isSB && (
+                    <TableMarker kind="sb" amount={sbAmount} />
+                  )}
+                  {isBB && (
+                    <TableMarker kind="bb" amount={bbAmount} />
+                  )}
                 </div>
               )}
 
@@ -293,32 +328,18 @@ export function Table() {
                 {player.betStreet > 0 && visualState !== "eliminated" && (
                   <motion.div
                     key={`bet-${player.id}-${player.betStreet}`}
-                    className="absolute z-[7] -translate-x-1/2 -translate-y-1/2"
-                    style={{ left: betPos.left, top: betPos.top }}
+                    className="absolute z-[6]"
+                    style={rectStyle(slot.bet)}
                     initial={
-                      reduce
-                        ? false
-                        : {
-                            left: seatPos.left,
-                            top: seatPos.top,
-                            opacity: 0,
-                            scale: 0.6,
-                          }
+                      reduce ? false : { opacity: 0, scale: 0.85 }
                     }
-                    animate={{
-                      left: betPos.left,
-                      top: betPos.top,
-                      opacity: 1,
-                      scale: 1,
-                    }}
+                    animate={{ opacity: 1, scale: 1 }}
                     exit={
-                      reduce
-                        ? undefined
-                        : { left: "50%", top: "50%", opacity: 0, scale: 0.5 }
+                      reduce ? undefined : { opacity: 0, scale: 0.6 }
                     }
                     transition={{ type: "spring", stiffness: 320, damping: 26 }}
                   >
-                    <ChipStack amount={player.betStreet} size="sm" />
+                    <TableBet amount={player.betStreet} />
                   </motion.div>
                 )}
               </AnimatePresence>
