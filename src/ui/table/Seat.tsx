@@ -79,7 +79,6 @@ export function Seat({
       ? "var(--seat-folded-text)"
       : "var(--seat-active-text)";
 
-  // Hero cards live in the action bar — bots keep mini cards in the seat.
   const showSeatCards = !isHero && !folded && !eliminated;
   const revealed = showCards && player.holeCards.length > 0;
   const slots: (Card | null)[] = showSeatCards
@@ -88,44 +87,62 @@ export function Seat({
       : [null, null]
     : [];
 
-  return (
-    <div className="relative flex flex-col items-center">
-      <AnimatePresence>
-        {actionBubble && (
-          <motion.div
-            key={`${handId}-${actionBubble}-${actionBubbleFresh}`}
-            initial={reduce ? false : { opacity: 0, y: 6, scale: 0.9 }}
-            animate={{
-              opacity: actionBubbleFresh ? 1 : 0.75,
-              y: 0,
-              scale: actionBubbleFresh ? 1 : 0.92,
-            }}
-            exit={reduce ? undefined : { opacity: 0, y: -4 }}
-            className={cn(
-              "absolute -top-8 z-20 max-w-[9rem] truncate rounded-full px-2.5 py-0.5 text-center text-xs font-medium shadow-card",
-              actionBubbleFresh ? "text-sm" : "text-[11px]",
-            )}
-            style={{
-              background: "var(--seat-action-bubble-bg)",
-              color: "var(--seat-action-bubble-text)",
-            }}
-          >
-            {actionBubble}
-          </motion.div>
-        )}
-      </AnimatePresence>
+  const showActionInPlate = Boolean(actionBubble && actionBubbleFresh);
+  const metaLine = showActionInPlate
+    ? actionBubble
+    : styleText && difficulty
+      ? ui.styleLabel(styleText, difficulty)
+      : isHero
+        ? ui.youMarker
+        : null;
 
+  return (
+    <div className="relative flex w-[7.25rem] flex-col items-center">
       {acting && (
         <span
-          className="absolute -top-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-surface shadow-card"
+          className="absolute -top-2.5 z-20 rounded-full px-2 py-0.5 text-[10px] font-bold text-surface shadow-card"
           style={{ background: "var(--seat-badge-turn)" }}
         >
           {turnLabel}
         </span>
       )}
 
+      {showSeatCards && (
+        <div
+          key={`cards-${handId}-${player.id}`}
+          className="relative z-0 mb-[-10px] flex items-end justify-center gap-0.5"
+          style={{ minHeight: revealed ? 36 : 22 }}
+        >
+          <AnimatePresence mode="popLayout">
+            {slots.map((card, i) => {
+              const faceDown = !revealed;
+              const ck = cardKey(card, faceDown);
+              return (
+                <motion.div
+                  key={`${handId}-${player.id}-${ck}-${i}`}
+                  initial={reduce ? false : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={
+                    reduce ? { opacity: 0 } : { opacity: 0, y: -12, scale: 0.6 }
+                  }
+                  transition={{ duration: 0.2 }}
+                  className="relative"
+                  style={{ zIndex: i }}
+                >
+                  <PlayingCard
+                    card={card}
+                    faceDown={faceDown}
+                    size={revealed ? "sm" : "xs"}
+                  />
+                </motion.div>
+              );
+            })}
+          </AnimatePresence>
+        </div>
+      )}
+
       <div
-        className="relative flex min-w-[7.5rem] flex-col items-center gap-1 rounded-xl px-3 py-2 text-center shadow-card"
+        className="relative z-10 flex w-full flex-col items-center gap-0.5 rounded-lg px-2 py-1.5 text-center shadow-card"
         style={{
           background: bg,
           color: fg,
@@ -134,7 +151,7 @@ export function Seat({
             : folded
               ? "var(--seat-folded-opacity)"
               : 1,
-          borderWidth: acting ? 3 : 1,
+          borderWidth: acting ? 2 : 1,
           borderStyle: "solid",
           borderColor: acting
             ? "var(--seat-acting-ring)"
@@ -142,17 +159,17 @@ export function Seat({
               ? "var(--seat-hero-rim)"
               : "var(--seat-idle-border)",
           boxShadow: acting
-            ? "0 0 0 3px var(--seat-acting-glow), var(--shadow-seat)"
+            ? "0 0 0 2px var(--seat-acting-glow), var(--shadow-seat)"
             : winner
-              ? "0 0 18px 2px var(--seat-winner-halo)"
+              ? "0 0 14px 2px var(--seat-winner-halo)"
               : "var(--shadow-seat)",
           filter: folded || eliminated ? "grayscale(0.35)" : undefined,
         }}
       >
-        <div className="flex flex-wrap items-center justify-center gap-1 text-[10px]">
+        <div className="flex flex-wrap items-center justify-center gap-1 text-[9px]">
           {folded && (
             <span
-              className="rounded px-1.5 py-0.5 font-semibold uppercase tracking-wide"
+              className="rounded px-1 font-semibold uppercase tracking-wide"
               style={{
                 background: "var(--seat-badge-folded)",
                 color: "var(--seat-active-text)",
@@ -163,75 +180,63 @@ export function Seat({
           )}
           {allIn && !folded && (
             <span
-              className="rounded px-1.5 py-0.5 font-bold tracking-wide text-surface"
+              className="rounded px-1 font-bold tracking-wide text-surface"
               style={{ background: "var(--seat-badge-allin)" }}
             >
               {ui.labelAllIn}
             </span>
           )}
           {eliminated && (
-            <span className="rounded bg-surface/30 px-1.5 py-0.5 font-semibold">
+            <span className="rounded bg-surface/30 px-1 font-semibold">
               {ui.labelEliminated}
             </span>
           )}
         </div>
 
-        <div className="text-sm font-medium">{player.name}</div>
-        {isHero && (
-          <div
-            className="text-[10px] font-semibold uppercase tracking-wide"
-            style={{ color: "var(--seat-hero-rim)" }}
-          >
-            {ui.youMarker}
-          </div>
-        )}
-        {styleText && difficulty && (
-          <div className="text-[10px] opacity-70">
-            {ui.styleLabel(styleText, difficulty)}
-          </div>
-        )}
+        <div className="flex w-full min-w-0 items-baseline justify-center gap-1">
+          <span className="truncate text-xs font-semibold leading-tight">
+            {isHero ? ui.youMarker : player.name}
+          </span>
+        </div>
+
+        <div
+          className={cn(
+            "min-h-[14px] w-full truncate text-[10px] leading-tight",
+            showActionInPlate ? "font-semibold" : "opacity-70",
+          )}
+          style={
+            showActionInPlate
+              ? {
+                  color: "var(--seat-action-bubble-text)",
+                }
+              : undefined
+          }
+        >
+          <AnimatePresence mode="wait">
+            <motion.span
+              key={showActionInPlate ? `act-${actionBubble}` : `meta-${metaLine}`}
+              initial={reduce ? false : { opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="block truncate"
+            >
+              {metaLine}
+            </motion.span>
+          </AnimatePresence>
+        </div>
+
         <AnimatedChips
           value={player.stack}
-          className="text-lg font-semibold text-gold"
+          className="text-base font-bold tabular-nums text-gold"
         />
-
-        {showSeatCards && (
-          <div
-            key={`cards-${handId}-${player.id}`}
-            className="relative mt-1 flex items-center justify-center gap-1"
-            style={{ minHeight: revealed ? 46 : 26 }}
-          >
-            <AnimatePresence mode="popLayout">
-              {slots.map((card, i) => {
-                const faceDown = !revealed;
-                const ck = cardKey(card, faceDown);
-                return (
-                  <motion.div
-                    key={`${handId}-${player.id}-${ck}-${i}`}
-                    initial={reduce ? false : { opacity: 0, scale: 0.85 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={reduce ? { opacity: 0 } : { opacity: 0, y: -20, scale: 0.5 }}
-                    transition={{ duration: 0.25 }}
-                  >
-                    <PlayingCard
-                      card={card}
-                      faceDown={faceDown}
-                      size={revealed ? "sm" : "xs"}
-                    />
-                  </motion.div>
-                );
-              })}
-            </AnimatePresence>
-          </div>
-        )}
 
         <AnimatePresence>
           {showWinner && winnerAmount != null && (
             <motion.div
-              initial={reduce ? false : { opacity: 0, y: 6 }}
+              initial={reduce ? false : { opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0 }}
-              className="absolute -bottom-7 rounded-full bg-gold px-2.5 py-0.5 text-xs font-semibold text-surface shadow-card"
+              className="absolute -bottom-6 rounded-full bg-gold px-2 py-0.5 text-[10px] font-semibold text-surface shadow-card"
             >
               {ui.winsAmount(
                 new Intl.NumberFormat("fr-FR").format(winnerAmount),

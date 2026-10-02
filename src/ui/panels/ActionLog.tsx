@@ -16,6 +16,7 @@ function playerName(id: string, names: Record<string, string>): string {
 export function ActionLog() {
   const events = useGameStore((s) => s.events);
   const gameState = useGameStore((s) => s.gameState);
+  const heroId = useGameStore((s) => s.heroId);
   const listRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const { mode } = useVocab();
@@ -42,8 +43,8 @@ export function ActionLog() {
   };
 
   const textExport = useMemo(
-    () => formatHandText(events, names, mode),
-    [events, names, mode],
+    () => formatHandText(events, names, mode, heroId),
+    [events, names, mode, heroId],
   );
 
   return (
@@ -70,6 +71,7 @@ export function ActionLog() {
             names={names}
             mode={mode}
             handId={handId}
+            heroId={heroId}
           />
         ))}
       </div>
@@ -82,11 +84,13 @@ function LogLine({
   names,
   mode,
   handId,
+  heroId,
 }: {
   event: GameEvent;
   names: Record<string, string>;
   mode: "simple" | "poker";
   handId: number;
+  heroId: string;
 }) {
   switch (event.type) {
     case "HAND_STARTED":
@@ -121,15 +125,21 @@ function LogLine({
           </div>
         </div>
       );
-    case "PLAYER_ACTED":
+    case "PLAYER_ACTED": {
+      const isHero = event.playerId === heroId;
+      const action = formatAction(event.action, event.amount, { isHero });
+      if (isHero) {
+        return <div className="text-text">{action}</div>;
+      }
       return (
         <div className="text-text">
           <span className="font-medium">
             {playerName(event.playerId, names)}
           </span>{" "}
-          {formatAction(event.action, event.amount)}
+          {action}
         </div>
       );
+    }
     case "SHOWDOWN":
       return (
         <div className="font-medium text-text">
@@ -157,14 +167,20 @@ function formatHandText(
   events: GameEvent[],
   names: Record<string, string>,
   mode: "simple" | "poker",
+  heroId: string,
 ): string {
   return events
     .map((e) => {
       switch (e.type) {
         case "HAND_STARTED":
           return `--- ${ui.handNumber(e.handNumber)} ---`;
-        case "PLAYER_ACTED":
-          return `${playerName(e.playerId, names)} ${formatAction(e.action, e.amount)}`;
+        case "PLAYER_ACTED": {
+          const isHero = e.playerId === heroId;
+          const action = formatAction(e.action, e.amount, { isHero });
+          return isHero
+            ? action
+            : `${playerName(e.playerId, names)} ${action}`;
+        }
         case "STREET_DEALT":
           return `${streetLabel(e.street, mode)}: ${e.cards.map((c) => c.rank + c.suit).join(" ")}`;
         case "POT_AWARDED":

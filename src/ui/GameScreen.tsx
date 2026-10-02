@@ -79,7 +79,7 @@ function GameScreenInner() {
         <aside className="flex max-h-[42vh] w-full shrink-0 flex-col border-t border-border bg-surface-2 lg:max-h-none lg:h-full lg:w-[360px] lg:border-l lg:border-t-0">
           <section
             data-panel="odds"
-            className="max-h-[45%] shrink-0 overflow-y-auto border-b border-border p-4 lg:max-h-[50%]"
+            className="max-h-none shrink-0 overflow-visible border-b border-border p-3 lg:max-h-none"
           >
             <OddsPanel />
           </section>

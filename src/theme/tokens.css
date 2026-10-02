@@ -62,6 +62,7 @@
   --action-bar-bg: #1a1d21;
   --action-bar-border: color-mix(in srgb, var(--text) 18%, transparent);
   --action-bar-stack: var(--gold);
+  --action-bar-height: 9.75rem;
   --slider-bubble-bg: var(--surface-elevated);
   --slider-bubble-text: var(--text);
 
@@ -161,6 +162,11 @@
   /* Font roles — values injected by next/font on <html> */
   --font-ui: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
   --font-display-family: var(--font-display), ui-serif, Georgia, serif;
+
+  /* Stadium table — rounded rectangle */
+  --table-stadium-radius: clamp(2.5rem, 12%, 5rem);
+  --board-slot-empty: color-mix(in srgb, var(--text) 22%, transparent);
+  --board-slot-empty-bg: color-mix(in srgb, var(--felt-deep) 55%, transparent);
 }
 
 [data-theme="light"] {
@@ -214,6 +220,7 @@
   --action-bar-bg: #ebe7df;
   --action-bar-border: color-mix(in srgb, var(--text) 16%, transparent);
   --action-bar-stack: #8a7018;
+  --action-bar-height: 9.75rem;
   --slider-bubble-bg: var(--surface-elevated);
   --slider-bubble-text: var(--text);
 
@@ -298,4 +305,8 @@
       color-mix(in srgb, var(--felt-highlight) 10%, transparent) 2px,
       color-mix(in srgb, var(--felt-highlight) 10%, transparent) 3px
     );
+
+  --table-stadium-radius: clamp(2.5rem, 12%, 5rem);
+  --board-slot-empty: color-mix(in srgb, var(--text) 28%, transparent);
+  --board-slot-empty-bg: color-mix(in srgb, var(--felt-deep) 40%, transparent);
 }

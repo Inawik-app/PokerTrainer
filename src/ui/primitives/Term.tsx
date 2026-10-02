@@ -23,6 +23,10 @@ type Props = {
   showSecondary?: boolean;
 };
 
+/**
+ * In "simple" mode: beginner label on top, poker term small below.
+ * In "poker" mode: poker term on top, simple gloss below.
+ */
 export function Term({
   id,
   children,
@@ -35,11 +39,11 @@ export function Term({
   const secondary = secondaryLabel(entry, mode);
 
   return (
-    <span className={cn("inline-flex flex-col items-start gap-0.5", className)}>
-      <span className="text-text">{primary}</span>
+    <span className={cn("inline-flex flex-col items-start gap-0", className)}>
+      <span className="text-sm font-medium leading-snug text-text">{primary}</span>
       {showSecondary && (
         <Tooltip>
-          <TooltipTrigger className="cursor-help border-b border-dotted border-text-muted text-[11px] leading-tight text-text-muted">
+          <TooltipTrigger className="cursor-help border-b border-dotted border-text-muted text-[10px] leading-tight text-text-muted">
             {secondary}
           </TooltipTrigger>
           <TooltipContent className="max-w-xs text-sm">

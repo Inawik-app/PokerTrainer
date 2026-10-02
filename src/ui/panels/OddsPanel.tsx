@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { evaluateHand, getLegalActions } from "@/engine";
 import {
   callEV,
@@ -14,7 +15,7 @@ import { useGameStore } from "@/store";
 import { useEquity } from "@/ui/hooks/useEquity";
 import { PlayingCard } from "@/ui/cards/PlayingCard";
 import { Term } from "@/ui/primitives/Term";
-import { formatChips, formatPercent } from "@/lib/format";
+import { formatChips, formatNumber, formatPercent } from "@/lib/format";
 import { ui } from "@/content/wording";
 import { cn } from "@/lib/utils";
 import { CoachPanel } from "./CoachPanel";
@@ -30,6 +31,7 @@ function startingCategory(ranks: string[]): string {
 export function OddsPanel() {
   const gameState = useGameStore((s) => s.gameState);
   const heroId = useGameStore((s) => s.heroId);
+  const [detailsOpen, setDetailsOpen] = useState(false);
 
   const hero = gameState?.players.find((p) => p.id === heroId);
   const opponents =
@@ -80,34 +82,45 @@ export function OddsPanel() {
       : null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-2.5">
       <div>
-        <h2 className="text-sm font-semibold text-text">{ui.oddsTitle}</h2>
-        <p className="mt-1 text-lg font-medium text-text">
+        <h2 className="text-xs font-semibold uppercase tracking-wide text-text-muted">
+          {ui.oddsTitle}
+        </h2>
+        <p className="text-base font-medium text-text">
           {hand?.labelFr ??
             (preflopCat ? ui.startingHand(preflopCat) : null)}
         </p>
       </div>
 
       <div>
-        <div className="flex items-start justify-between gap-3">
+        <div className="flex items-start justify-between gap-2">
           <Term id="equity" />
-          <span className="font-display text-3xl font-semibold tabular-nums text-gold">
+          <span className="font-display text-2xl font-semibold tabular-nums text-gold">
             {equity ? formatPercent(eq, 0) : "…"}
           </span>
         </div>
-        <p className="text-xs text-text-muted">{ui.vsOpponents(opponents)}</p>
+        <p className="text-[11px] text-text-muted">{ui.vsOpponents(opponents)}</p>
         {equity && (
-          <div className="mt-2 space-y-1">
-            <div className="flex h-2 overflow-hidden rounded-full bg-surface">
-              <div className="bg-success" style={{ width: `${equity.win * 100}%` }} />
-              <div className="bg-warning" style={{ width: `${equity.tie * 100}%` }} />
-              <div className="bg-danger" style={{ width: `${equity.lose * 100}%` }} />
+          <div className="mt-1.5 space-y-1">
+            <div className="flex h-1.5 overflow-hidden rounded-full bg-surface">
+              <div
+                className="bg-success"
+                style={{ width: `${equity.win * 100}%` }}
+              />
+              <div
+                className="bg-warning"
+                style={{ width: `${equity.tie * 100}%` }}
+              />
+              <div
+                className="bg-danger"
+                style={{ width: `${equity.lose * 100}%` }}
+              />
             </div>
             <div className="flex justify-between text-[10px] text-text-muted">
-              <Term id="win" showSecondary={false} className="!flex-row gap-1" />
-              <Term id="tie" showSecondary={false} className="!flex-row gap-1" />
-              <Term id="lose" showSecondary={false} className="!flex-row gap-1" />
+              <Term id="win" showSecondary={false} />
+              <Term id="tie" showSecondary={false} />
+              <Term id="lose" showSecondary={false} />
             </div>
           </div>
         )}
@@ -116,7 +129,7 @@ export function OddsPanel() {
       {outs.length > 0 && (
         <div>
           <Term id="outs" />
-          <p className="mb-1 text-sm text-text-muted">
+          <p className="mb-1 text-xs text-text-muted">
             {ui.outsCount(outs.length)}
           </p>
           <div className="flex flex-wrap gap-1">
@@ -128,7 +141,7 @@ export function OddsPanel() {
       )}
 
       {toCall > 0 && (
-        <div className="space-y-2 text-sm">
+        <div className="space-y-1.5 text-sm">
           <div className="flex items-start justify-between gap-2">
             <Term id="potOdds" />
             <span className="shrink-0 tabular-nums">{formatPercent(odds, 0)}</span>
@@ -147,18 +160,35 @@ export function OddsPanel() {
         </div>
       )}
 
-      <div className="flex items-start justify-between gap-2 text-sm">
-        <Term id="spr" />
-        <span className="shrink-0 tabular-nums">{sprVal.toFixed(1)}</span>
-      </div>
-      <div className="flex items-start justify-between gap-2 text-sm">
-        <Term id="effectiveStack" />
-        <span className="shrink-0 tabular-nums">{formatChips(eff)}</span>
+      <div>
+        <button
+          type="button"
+          className="text-xs font-semibold text-text-muted underline-offset-2 hover:underline"
+          onClick={() => setDetailsOpen((o) => !o)}
+          aria-expanded={detailsOpen}
+        >
+          {ui.moreDetails}
+          {detailsOpen ? " ▾" : " ▸"}
+        </button>
+        {detailsOpen && (
+          <div className="mt-1.5 space-y-1.5 text-sm">
+            <div className="flex items-start justify-between gap-2">
+              <Term id="spr" />
+              <span className="shrink-0 tabular-nums">
+                {formatNumber(sprVal, 1)}
+              </span>
+            </div>
+            <div className="flex items-start justify-between gap-2">
+              <Term id="effectiveStack" />
+              <span className="shrink-0 tabular-nums">{formatChips(eff)}</span>
+            </div>
+          </div>
+        )}
       </div>
 
       <div
         className={cn(
-          "space-y-1 rounded-lg px-3 py-2 text-sm",
+          "space-y-0.5 rounded-lg px-2.5 py-1.5 text-sm",
           verdict === "good" && "bg-success/20 text-success",
           verdict === "marginal" && "bg-warning/20 text-warning",
           verdict === "bad" && "bg-danger/20 text-danger",

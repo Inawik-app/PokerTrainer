@@ -40,6 +40,8 @@ type Props = {
   amount: number;
   size?: "sm" | "md" | "lg";
   label?: string;
+  /** When false, no amount pill under the chips. */
+  showLabel?: boolean;
   className?: string;
   animateIn?: boolean;
 };
@@ -48,6 +50,7 @@ export function ChipStack({
   amount,
   size = "md",
   label,
+  showLabel = true,
   className,
   animateIn = true,
 }: Props) {
@@ -98,15 +101,17 @@ export function ChipStack({
           ));
         })}
       </div>
-      <div
-        className="rounded-full px-2.5 py-0.5 font-display text-[14px] font-semibold tabular-nums tracking-tight shadow-card"
-        style={{
-          background: "var(--chip-label-bg)",
-          color: "var(--chip-label-text)",
-        }}
-      >
-        {labelText}
-      </div>
+      {showLabel && (
+        <div
+          className="rounded-full px-2.5 py-0.5 font-display text-[14px] font-semibold tabular-nums tracking-tight shadow-card"
+          style={{
+            background: "var(--chip-label-bg)",
+            color: "var(--chip-label-text)",
+          }}
+        >
+          {labelText}
+        </div>
+      )}
     </motion.div>
   );
 }

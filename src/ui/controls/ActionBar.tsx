@@ -13,12 +13,13 @@ import { useGameStore } from "@/store";
 import { PlayingCard, cardKey } from "@/ui/cards/PlayingCard";
 import { useEquity } from "@/ui/hooks/useEquity";
 import { useVocab } from "@/ui/hooks/useVocab";
-import { formatChips } from "@/lib/format";
+import { formatChips, formatStackPercent } from "@/lib/format";
 import { ui, primaryLabel, terms } from "@/content/wording";
 import {
   BetZoneSlider,
   amountWithStackPct,
   potFractionApprox,
+  zoneKindColor,
 } from "./BetZoneSlider";
 
 const RANK_FR_PLURAL: Record<string, string> = {
@@ -52,33 +53,31 @@ function ActionBtn({
   onClick,
   children,
   shortcut,
+  className,
 }: {
-  tone: "fold" | "check" | "bet" | "allin";
+  tone: "fold" | "check" | "bet";
   onClick: () => void;
   children: React.ReactNode;
   shortcut?: string;
+  className?: string;
 }) {
   const bg =
     tone === "fold"
       ? "var(--btn-fold-bg)"
       : tone === "check"
         ? "var(--btn-check-bg)"
-        : tone === "allin"
-          ? "var(--btn-allin-bg)"
-          : "var(--btn-bet-bg)";
+        : "var(--btn-bet-bg)";
   const fg =
     tone === "fold"
       ? "var(--btn-fold-text)"
       : tone === "check"
         ? "var(--btn-check-text)"
-        : tone === "allin"
-          ? "var(--btn-allin-text)"
-          : "var(--btn-bet-text)";
+        : "var(--btn-bet-text)";
   return (
     <button
       type="button"
       onClick={onClick}
-      className="relative inline-flex min-h-12 min-w-[7.5rem] items-center justify-center rounded-lg px-4 text-base font-bold shadow-card transition-opacity hover:opacity-90 active:opacity-80"
+      className={`relative inline-flex min-h-12 flex-1 items-center justify-center rounded-lg px-3 text-sm font-bold shadow-card transition-opacity hover:opacity-90 active:opacity-80 sm:text-base ${className ?? ""}`}
       style={{ background: bg, color: fg }}
     >
       {children}
@@ -88,40 +87,6 @@ function ActionBtn({
         </kbd>
       )}
     </button>
-  );
-}
-
-function HeroCards({
-  hole,
-  board,
-  handId,
-}: {
-  hole: Card[];
-  board: Card[];
-  handId: number;
-}) {
-  const name =
-    board.length >= 3
-      ? evaluateHand([...hole, ...board]).labelFr
-      : pocketLabel(hole);
-
-  return (
-    <div className="flex shrink-0 items-center gap-3">
-      <div className="flex gap-1.5">
-        {hole.map((card, i) => (
-          <PlayingCard
-            key={`${handId}-hero-${cardKey(card, false)}-${i}`}
-            card={card}
-            size="md"
-          />
-        ))}
-      </div>
-      <div className="min-w-0">
-        {name && (
-          <p className="text-sm font-semibold leading-tight text-text">{name}</p>
-        )}
-      </div>
-    </div>
   );
 }
 
@@ -161,15 +126,17 @@ export function ActionBar() {
   const [raiseTo, setRaiseTo] = useState(0);
 
   const outs =
-    gameState && hero && gameState.board.length >= 3 && gameState.board.length < 5
+    gameState &&
+    hero &&
+    gameState.board.length >= 3 &&
+    gameState.board.length < 5
       ? getOuts(hero.holeCards, gameState.board)
       : [];
 
   const zonesInput: BetZonesInput | null = useMemo(() => {
     if (!gameState || !raiseOrBet || !hero) return null;
     const bb = gameState.config.bigBlind;
-    const isReRaise =
-      Boolean(legal?.raise) && gameState.currentBet > bb;
+    const isReRaise = Boolean(legal?.raise) && gameState.currentBet > bb;
     const callers = gameState.players.filter(
       (p) =>
         p.id !== heroId &&
@@ -205,10 +172,7 @@ export function ActionBar() {
   useEffect(() => {
     if (!raiseOrBet || !zonesInput) return;
     const z = getBetZones(zonesInput, eq);
-    setRaiseTo(
-      defaultAmountInGoodZone(z, raiseOrBet.min, raiseOrBet.max),
-    );
-    // Reset only when the decision context changes, not on equity refine.
+    setRaiseTo(defaultAmountInGoodZone(z, raiseOrBet.min, raiseOrBet.max));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     raiseOrBet?.min,
@@ -220,7 +184,10 @@ export function ActionBar() {
   useEffect(() => {
     if (!isHeroTurn || !legal) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement)
+      if (
+        e.target instanceof HTMLInputElement ||
+        e.target instanceof HTMLTextAreaElement
+      )
         return;
       const k = e.key.toLowerCase();
       if (k === "f" && legal.fold) {
@@ -248,44 +215,67 @@ export function ActionBar() {
   const barStyle = {
     background: "var(--action-bar-bg)",
     borderColor: "var(--action-bar-border)",
+    minHeight: "var(--action-bar-height, 9.5rem)",
   } as const;
 
-  const heroBlock =
-    hero && hero.holeCards.length === 2 && phase !== "idle" ? (
-      <HeroCards
-        hole={hero.holeCards}
-        board={gameState?.board ?? []}
-        handId={gameState?.handNumber ?? 0}
-      />
-    ) : null;
+  const handName =
+    hero && hero.holeCards.length === 2
+      ? gameState && gameState.board.length >= 3
+        ? evaluateHand([...hero.holeCards, ...gameState.board]).labelFr
+        : pocketLabel(hero.holeCards)
+      : null;
 
-  const stackBlock = hero ? (
-    <div className="flex shrink-0 flex-col items-center px-2">
-      <span className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
-        Ton tapis
-      </span>
-      <span
-        className="font-display text-2xl font-bold tabular-nums sm:text-3xl"
-        style={{ color: "var(--action-bar-stack)" }}
-      >
-        {formatChips(hero.stack)}
-      </span>
+  const leftZone = (
+    <div className="flex w-[11rem] shrink-0 flex-col items-center gap-1 sm:w-[12.5rem]">
+      {hero && hero.holeCards.length === 2 ? (
+        <>
+          <div className="flex gap-1.5">
+            {hero.holeCards.map((card, i) => (
+              <PlayingCard
+                key={`${gameState?.handNumber ?? 0}-hero-${cardKey(card, false)}-${i}`}
+                card={card}
+                size="md"
+              />
+            ))}
+          </div>
+          {handName && (
+            <p className="text-center text-xs font-semibold text-text">
+              {handName}
+            </p>
+          )}
+        </>
+      ) : (
+        <div className="h-16" />
+      )}
+      {hero && (
+        <div className="text-center">
+          <div className="text-[10px] font-semibold uppercase tracking-wide text-text-muted">
+            Ton tapis
+          </div>
+          <div
+            className="font-display text-2xl font-bold tabular-nums"
+            style={{ color: "var(--action-bar-stack)" }}
+          >
+            {formatChips(hero.stack)}
+          </div>
+        </div>
+      )}
     </div>
-  ) : null;
+  );
 
   if (phase === "handOver") {
     return (
       <div
-        className="flex flex-wrap items-center justify-between gap-4 border-t px-4 py-3"
+        className="flex items-center gap-3 border-t px-3 py-2"
         style={barStyle}
       >
-        {heroBlock}
-        {stackBlock}
+        {leftZone}
         <div className="flex flex-1 justify-center">
-          <ActionBtn tone="bet" onClick={nextHand}>
+          <ActionBtn tone="bet" onClick={nextHand} className="max-w-xs">
             {ui.nextHand}
           </ActionBtn>
         </div>
+        <div className="hidden w-44 shrink-0 sm:block" />
       </div>
     );
   }
@@ -293,14 +283,14 @@ export function ActionBar() {
   if (!isHeroTurn || !legal || !gameState || !hero) {
     return (
       <div
-        className="flex flex-wrap items-center justify-between gap-4 border-t px-4 py-3"
+        className="flex items-center gap-3 border-t px-3 py-2"
         style={barStyle}
       >
-        {heroBlock}
-        {stackBlock}
+        {leftZone}
         <p className="flex-1 text-center text-sm text-text-muted">
           {ui.waitingBots}
         </p>
+        <div className="hidden w-44 shrink-0 sm:block" />
       </div>
     );
   }
@@ -308,106 +298,112 @@ export function ActionBar() {
   const currentZone = zoneAt(zones, raiseTo);
   const putIn = Math.max(0, raiseTo - hero.betStreet);
   const potFrac = potFractionApprox(putIn, Math.max(1, gameState.pot));
+  const stackPct = formatStackPercent(putIn, hero.stack);
+
+  const midZone = (
+    <div className="flex min-w-0 flex-1 flex-col justify-center gap-2">
+      <div className="flex w-full gap-2">
+        {legal.fold && (
+          <ActionBtn
+            tone="fold"
+            shortcut="F"
+            onClick={() => humanAction({ type: "fold" })}
+          >
+            {primaryLabel(terms.fold, mode)}
+          </ActionBtn>
+        )}
+        {legal.check && (
+          <ActionBtn
+            tone="check"
+            shortcut="C"
+            onClick={() => humanAction({ type: "check" })}
+          >
+            {primaryLabel(terms.check, mode)}
+          </ActionBtn>
+        )}
+        {legal.call && (
+          <ActionBtn
+            tone="check"
+            shortcut="C"
+            onClick={() => humanAction({ type: "call" })}
+          >
+            {ui.callAmountPct(
+              formatChips(legal.call.amount),
+              formatStackPercent(legal.call.amount, hero.stack),
+            )}
+          </ActionBtn>
+        )}
+        {legal.bet && raiseOrBet && (
+          <ActionBtn
+            tone="bet"
+            shortcut="R"
+            onClick={() => humanAction({ type: "bet", amount: raiseTo })}
+          >
+            {ui.betToAmount(amountWithStackPct(putIn, hero.stack))}
+          </ActionBtn>
+        )}
+        {legal.raise && raiseOrBet && (
+          <ActionBtn
+            tone="bet"
+            shortcut="R"
+            onClick={() => humanAction({ type: "raise", amount: raiseTo })}
+          >
+            {ui.raiseToAmount(amountWithStackPct(putIn, hero.stack))}
+          </ActionBtn>
+        )}
+      </div>
+
+      {raiseOrBet ? (
+        <BetZoneSlider
+          min={raiseOrBet.min}
+          max={raiseOrBet.max}
+          value={raiseTo}
+          zones={zones}
+          pot={gameState.pot}
+          currentBet={gameState.currentBet}
+          street={gameState.street}
+          bigBlind={gameState.config.bigBlind}
+          onChange={setRaiseTo}
+        />
+      ) : (
+        <div className="h-10" />
+      )}
+    </div>
+  );
+
+  const rightZone = raiseOrBet ? (
+    <aside
+      className="hidden w-44 shrink-0 flex-col justify-center gap-0.5 rounded-lg border border-border px-3 py-2 sm:flex"
+      style={{ background: "var(--slider-bubble-bg)" }}
+    >
+      <p className="text-sm font-bold tabular-nums text-text">
+        {ui.chipsAmount(formatChips(raiseTo))}
+      </p>
+      <p className="text-xs text-text-muted">{ui.stackPercentOf(stackPct)}</p>
+      <p className="text-xs text-text-muted">{potFrac}</p>
+      {currentZone && (
+        <>
+          <p
+            className="mt-1 text-sm font-bold"
+            style={{ color: zoneKindColor(currentZone.kind) }}
+          >
+            {currentZone.label}
+          </p>
+          <p className="line-clamp-2 text-[11px] leading-snug text-text-muted">
+            {currentZone.reason}
+          </p>
+        </>
+      )}
+    </aside>
+  ) : (
+    <div className="hidden w-44 shrink-0 sm:block" />
+  );
 
   return (
-    <div className="border-t px-3 py-3 sm:px-4" style={barStyle}>
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center gap-3">
-          {heroBlock}
-          {stackBlock}
-
-          <div className="flex min-w-0 flex-1 flex-col gap-2">
-            {raiseOrBet && (
-              <BetZoneSlider
-                min={raiseOrBet.min}
-                max={raiseOrBet.max}
-                value={raiseTo}
-                zones={zones}
-                pot={gameState.pot}
-                stack={hero.stack}
-                currentBet={gameState.currentBet}
-                heroBetStreet={hero.betStreet}
-                street={gameState.street}
-                bigBlind={gameState.config.bigBlind}
-                onChange={setRaiseTo}
-                zoneLabel={currentZone?.label ?? ""}
-                zoneReason={currentZone?.reason ?? ""}
-                potFractionText={potFrac}
-              />
-            )}
-
-            <div className="flex flex-wrap items-center justify-center gap-2">
-              {legal.fold && (
-                <ActionBtn
-                  tone="fold"
-                  shortcut="F"
-                  onClick={() => humanAction({ type: "fold" })}
-                >
-                  {primaryLabel(terms.fold, mode)}
-                </ActionBtn>
-              )}
-              {legal.check && (
-                <ActionBtn
-                  tone="check"
-                  shortcut="C"
-                  onClick={() => humanAction({ type: "check" })}
-                >
-                  {primaryLabel(terms.check, mode)}
-                </ActionBtn>
-              )}
-              {legal.call && (
-                <ActionBtn
-                  tone="check"
-                  shortcut="C"
-                  onClick={() => humanAction({ type: "call" })}
-                >
-                  {`Suivre ${amountWithStackPct(legal.call.amount, hero.stack)}`}
-                </ActionBtn>
-              )}
-              {legal.bet && (
-                <ActionBtn
-                  tone={raiseTo >= raiseOrBet!.max ? "allin" : "bet"}
-                  shortcut="R"
-                  onClick={() =>
-                    humanAction({ type: "bet", amount: raiseTo })
-                  }
-                >
-                  {raiseTo >= raiseOrBet!.max
-                    ? `Tapis ${amountWithStackPct(hero.stack, hero.stack)}`
-                    : `Miser ${amountWithStackPct(putIn, hero.stack)}`}
-                </ActionBtn>
-              )}
-              {legal.raise && (
-                <ActionBtn
-                  tone={raiseTo >= raiseOrBet!.max ? "allin" : "bet"}
-                  shortcut="R"
-                  onClick={() =>
-                    humanAction({ type: "raise", amount: raiseTo })
-                  }
-                >
-                  {raiseTo >= raiseOrBet!.max
-                    ? `Tapis ${amountWithStackPct(hero.stack, hero.stack)}`
-                    : `Relancer ${amountWithStackPct(putIn, hero.stack)}`}
-                </ActionBtn>
-              )}
-              {raiseOrBet && raiseTo < raiseOrBet.max && (
-                <ActionBtn
-                  tone="allin"
-                  shortcut="A"
-                  onClick={() => {
-                    const max = raiseOrBet.max;
-                    if (legal.bet) humanAction({ type: "bet", amount: max });
-                    else if (legal.raise)
-                      humanAction({ type: "raise", amount: max });
-                  }}
-                >
-                  {`Tapis ${amountWithStackPct(hero.stack, hero.stack)}`}
-                </ActionBtn>
-              )}
-            </div>
-          </div>
-        </div>
-      </div>
+    <div className="flex items-stretch gap-3 border-t px-3 py-2" style={barStyle}>
+      {leftZone}
+      {midZone}
+      {rightZone}
     </div>
   );
 }

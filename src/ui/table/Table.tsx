@@ -7,45 +7,53 @@ import {
   motion,
   useReducedMotion,
 } from "framer-motion";
-import { computePots, type GameEvent } from "@/engine";
+import { computePots, evaluateHand, type GameEvent } from "@/engine";
 import { useGameStore } from "@/store";
 import { Board } from "./Board";
 import { Pot } from "./Pot";
 import { Seat, type SeatVisualState } from "./Seat";
 import { TableMarker } from "./TableMarker";
+import { getSeatLayout, pct } from "./seatLayout";
 import { ChipStack } from "@/ui/cards/ChipStack";
 import { formatAction, formatChips, streetLabel } from "@/lib/format";
 import { ui } from "@/content/wording";
 import { useVocab } from "@/ui/hooks/useVocab";
-import { TermInline } from "@/ui/primitives/Term";
-import type { PlayerState, GameState } from "@/engine";
+import type { PlayerState, GameState, Card } from "@/engine";
 
-const POSITIONS: { left: string; top: string }[] = [
-  { left: "50%", top: "88%" },
-  { left: "12%", top: "70%" },
-  { left: "12%", top: "28%" },
-  { left: "50%", top: "10%" },
-  { left: "88%", top: "28%" },
-  { left: "88%", top: "70%" },
-];
+const RANK_FR_PLURAL: Record<string, string> = {
+  "2": "Deux",
+  "3": "Trois",
+  "4": "Quatre",
+  "5": "Cinq",
+  "6": "Six",
+  "7": "Sept",
+  "8": "Huit",
+  "9": "Neuf",
+  T: "Dix",
+  J: "Valets",
+  Q: "Dames",
+  K: "Rois",
+  A: "As",
+};
 
-function betPosition(seat: { left: string; top: string }) {
-  const lx = parseFloat(seat.left);
-  const ty = parseFloat(seat.top);
-  return { left: `${(lx + 50) / 2}%`, top: `${(ty + 50) / 2}%` };
+function pocketLabel(hole: Card[]): string | null {
+  if (hole.length < 2) return null;
+  if (hole[0]!.rank === hole[1]!.rank) {
+    return `Paire de ${RANK_FR_PLURAL[hole[0]!.rank] ?? hole[0]!.rank}`;
+  }
+  return null;
 }
 
-/** Between seat and bet zone. */
-function markerPosition(seat: { left: string; top: string }) {
-  const lx = parseFloat(seat.left);
-  const ty = parseFloat(seat.top);
-  return {
-    left: `${lx * 0.62 + 50 * 0.38}%`,
-    top: `${ty * 0.62 + 50 * 0.38}%`,
-  };
+function heroHandLabel(hole: Card[], board: Card[]): string | null {
+  if (hole.length < 2) return null;
+  if (board.length >= 3) return evaluateHand([...hole, ...board]).labelFr;
+  return pocketLabel(hole);
 }
 
-function actionsForCurrentHand(events: GameEvent[]): Record<string, string> {
+function actionsForCurrentHand(
+  events: GameEvent[],
+  heroId: string,
+): Record<string, string> {
   const text: Record<string, string> = {};
   let start = 0;
   for (let i = 0; i < events.length; i += 1) {
@@ -54,7 +62,9 @@ function actionsForCurrentHand(events: GameEvent[]): Record<string, string> {
   for (let i = start; i < events.length; i += 1) {
     const e = events[i]!;
     if (e.type === "PLAYER_ACTED") {
-      text[e.playerId] = formatAction(e.action, e.amount);
+      text[e.playerId] = formatAction(e.action, e.amount, {
+        isHero: e.playerId === heroId,
+      });
     }
   }
   return text;
@@ -90,7 +100,10 @@ export function Table() {
   const { mode } = useVocab();
   const [, setTick] = useState(0);
 
-  const actionText = useMemo(() => actionsForCurrentHand(events), [events]);
+  const actionText = useMemo(
+    () => actionsForCurrentHand(events, heroId),
+    [events, heroId],
+  );
   const prevAction = useRef<Record<string, string>>({});
   const freshUntil = useRef<Record<string, number>>({});
 
@@ -148,6 +161,7 @@ export function Table() {
   const ordered = players.map(
     (_, i) => players[(heroIndex + i) % players.length]!,
   );
+  const layout = getSeatLayout(ordered.length);
 
   const funded = players.filter((p) => p.stack > 0 || p.committed > 0);
   const isHu = funded.length === 2;
@@ -174,137 +188,144 @@ export function Table() {
   const sbAmount = gameState.config.smallBlind;
   const bbAmount = gameState.config.bigBlind;
 
-  const streetTermId =
-    gameState.street === "preflop"
-      ? "preflop"
-      : gameState.street === "flop"
-        ? "flop"
-        : gameState.street === "turn"
-          ? "turn"
-          : gameState.street === "river"
-            ? "river"
-            : "showdown";
+  const hero = players.find((p) => p.id === heroId);
+  const handName =
+    hero && hero.holeCards.length === 2
+      ? heroHandLabel(hero.holeCards, gameState.board)
+      : null;
 
   return (
     <LayoutGroup id="table-markers">
-    <div className="relative mx-auto aspect-[16/10] w-full max-w-5xl">
       <div
-        className="absolute inset-[8%] rounded-[50%] border-8 shadow-card"
-        style={{
-          borderColor: "var(--table-rail)",
-          background: "var(--felt-texture)",
-        }}
-      />
-      <motion.div
-        className="absolute left-1/2 top-1/2 flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-2"
-        layout
+        className="relative mx-auto h-full w-full max-h-full"
+        style={{ aspectRatio: "2 / 1", maxWidth: "min(100%, 1100px)" }}
       >
-        <Pot
-          amount={gameState.pot}
-          pots={sidePots.length > 0 ? sidePots : undefined}
+        {/* Stadium felt */}
+        <div
+          className="absolute inset-[4%] border-8 shadow-card"
+          style={{
+            borderColor: "var(--table-rail)",
+            background: "var(--felt-texture)",
+            borderRadius: "var(--table-stadium-radius)",
+          }}
         />
-        <p className="text-xs font-medium text-text-muted">
-          {ui.playersInHand(inHandCount)}
-        </p>
-        <Board cards={gameState.board} handId={gameState.handNumber} />
-        <div className="text-xs text-text-muted">
-          <TermInline id={streetTermId}>
+
+        {/* Center column */}
+        <div className="absolute left-1/2 top-[18%] z-[5] flex w-[70%] max-w-lg -translate-x-1/2 flex-col items-center gap-1.5">
+          {handName && (
+            <p className="text-[11px] font-medium text-text-muted">
+              {ui.yourHand(handName)}
+            </p>
+          )}
+          <Board cards={gameState.board} handId={gameState.handNumber} />
+          <Pot
+            amount={gameState.pot}
+            pots={sidePots.length > 0 ? sidePots : undefined}
+          />
+          <p className="text-[11px] text-text-muted">
             {streetLabel(gameState.street, mode)}
-          </TermInline>
+            <span className="mx-1.5 opacity-40">·</span>
+            {ui.playersInHand(inHandCount)}
+          </p>
         </div>
-      </motion.div>
 
-      {ordered.map((player, i) => {
-        const pos = POSITIONS[i] ?? POSITIONS[0]!;
-        const betPos = betPosition(pos);
-        const markPos = markerPosition(pos);
-        const faceUp =
-          player.id === heroId ||
-          gameState.street === "showdown" ||
-          gameState.handOver;
-        const cfg = botConfigs[player.id];
-        const visualState = resolveVisualState(
-          player,
-          gameState,
-          actingId,
-          winnerPayouts[player.id],
-        );
-        const bubble = actionText[player.id] ?? null;
-        const fresh = (freshUntil.current[player.id] ?? 0) > now;
-        const isBtn = player.seat === gameState.buttonSeat;
-        const isSB = player.seat === sbSeat;
-        const isBB = player.seat === bbSeat;
+        {ordered.map((player, i) => {
+          const slot = layout[i]!;
+          const seatPos = pct(slot.seat);
+          const betPos = pct(slot.bet);
+          const markPos = pct(slot.marker);
+          const faceUp =
+            player.id === heroId ||
+            gameState.street === "showdown" ||
+            gameState.handOver;
+          const cfg = botConfigs[player.id];
+          const visualState = resolveVisualState(
+            player,
+            gameState,
+            actingId,
+            winnerPayouts[player.id],
+          );
+          const bubble = actionText[player.id] ?? null;
+          const fresh = (freshUntil.current[player.id] ?? 0) > now;
+          const isBtn = player.seat === gameState.buttonSeat;
+          const isSB = player.seat === sbSeat;
+          const isBB = player.seat === bbSeat;
 
-        return (
-          <div key={player.id}>
-            <div
-              className="absolute -translate-x-1/2 -translate-y-1/2"
-              style={{ left: pos.left, top: pos.top }}
-            >
-              <Seat
-                player={player}
-                isHero={player.id === heroId}
-                visualState={visualState}
-                handId={gameState.handNumber}
-                showCards={
-                  faceUp &&
-                  player.holeCards.length > 0 &&
-                  visualState !== "folded" &&
-                  visualState !== "eliminated"
-                }
-                styleCode={cfg?.style}
-                difficulty={cfg?.difficulty}
-                actionBubble={bubble}
-                actionBubbleFresh={fresh}
-                winnerAmount={winnerPayouts[player.id] ?? null}
-              />
-            </div>
-
-            {(isBtn || isSB || isBB) && (
+          return (
+            <div key={player.id}>
               <div
-                className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
-                style={{ left: markPos.left, top: markPos.top }}
+                className="absolute z-[8] -translate-x-1/2 -translate-y-1/2"
+                style={{ left: seatPos.left, top: seatPos.top }}
               >
-                <div className="flex items-center gap-1">
-                  {isBtn && <TableMarker kind="dealer" />}
-                  {isSB && <TableMarker kind="sb" amount={sbAmount} />}
-                  {isBB && <TableMarker kind="bb" amount={bbAmount} />}
-                </div>
+                <Seat
+                  player={player}
+                  isHero={player.id === heroId}
+                  visualState={visualState}
+                  handId={gameState.handNumber}
+                  showCards={
+                    faceUp &&
+                    player.holeCards.length > 0 &&
+                    visualState !== "folded" &&
+                    visualState !== "eliminated"
+                  }
+                  styleCode={cfg?.style}
+                  difficulty={cfg?.difficulty}
+                  actionBubble={bubble}
+                  actionBubbleFresh={fresh}
+                  winnerAmount={winnerPayouts[player.id] ?? null}
+                />
               </div>
-            )}
 
-            <AnimatePresence>
-              {player.betStreet > 0 && visualState !== "eliminated" && (
-                <motion.div
-                  key={`bet-${player.id}-${player.betStreet}`}
-                  className="absolute -translate-x-1/2 -translate-y-1/2"
-                  style={{ left: betPos.left, top: betPos.top }}
-                  initial={
-                    reduce
-                      ? false
-                      : { left: pos.left, top: pos.top, opacity: 0, scale: 0.6 }
-                  }
-                  animate={{
-                    left: betPos.left,
-                    top: betPos.top,
-                    opacity: 1,
-                    scale: 1,
-                  }}
-                  exit={
-                    reduce
-                      ? undefined
-                      : { left: "50%", top: "50%", opacity: 0, scale: 0.5 }
-                  }
-                  transition={{ type: "spring", stiffness: 320, damping: 26 }}
+              {(isBtn || isSB || isBB) && (
+                <div
+                  className="absolute z-[9] -translate-x-1/2 -translate-y-1/2"
+                  style={{ left: markPos.left, top: markPos.top }}
                 >
-                  <ChipStack amount={player.betStreet} size="sm" />
-                </motion.div>
+                  <div className="flex items-center gap-0.5">
+                    {isBtn && <TableMarker kind="dealer" />}
+                    {isSB && <TableMarker kind="sb" amount={sbAmount} />}
+                    {isBB && <TableMarker kind="bb" amount={bbAmount} />}
+                  </div>
+                </div>
               )}
-            </AnimatePresence>
-          </div>
-        );
-      })}
-    </div>
+
+              <AnimatePresence>
+                {player.betStreet > 0 && visualState !== "eliminated" && (
+                  <motion.div
+                    key={`bet-${player.id}-${player.betStreet}`}
+                    className="absolute z-[7] -translate-x-1/2 -translate-y-1/2"
+                    style={{ left: betPos.left, top: betPos.top }}
+                    initial={
+                      reduce
+                        ? false
+                        : {
+                            left: seatPos.left,
+                            top: seatPos.top,
+                            opacity: 0,
+                            scale: 0.6,
+                          }
+                    }
+                    animate={{
+                      left: betPos.left,
+                      top: betPos.top,
+                      opacity: 1,
+                      scale: 1,
+                    }}
+                    exit={
+                      reduce
+                        ? undefined
+                        : { left: "50%", top: "50%", opacity: 0, scale: 0.5 }
+                    }
+                    transition={{ type: "spring", stiffness: 320, damping: 26 }}
+                  >
+                    <ChipStack amount={player.betStreet} size="sm" />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          );
+        })}
+      </div>
     </LayoutGroup>
   );
 }
