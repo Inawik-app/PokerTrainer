@@ -34,7 +34,7 @@ const DEFAULT_AIDS: AidSettings = {
   showPotOdds: true,
   showCoach: true,
   showLog: true,
-  revealStyles: true,
+  revealStyles: false,
   fourColor: true,
   reducedMotion: false,
   theme: "dark",
@@ -172,7 +172,6 @@ export function SettingsDialog() {
               ["showPotOdds", ui.showPotOdds],
               ["showCoach", ui.showCoach],
               ["showLog", ui.showLog],
-              ["revealStyles", ui.revealStyles],
               ["fourColor", ui.fourColor],
             ] as const
           ).map(([key, label]) => (
@@ -187,6 +186,21 @@ export function SettingsDialog() {
               />
             </label>
           ))}
+          <label className="flex items-start justify-between gap-4">
+            <span>
+              <span className="block">{ui.revealStyles}</span>
+              <span className="mt-0.5 block text-xs text-text-muted">
+                {ui.revealStylesHint}
+              </span>
+            </span>
+            <Switch
+              checked={aids.revealStyles}
+              onCheckedChange={(v) => {
+                updateAids({ revealStyles: v });
+                useGameStore.getState().setBotSetup({ revealBotProfiles: v });
+              }}
+            />
+          </label>
           <label className="flex items-center justify-between gap-4">
             <span>{ui.theme}</span>
             <select

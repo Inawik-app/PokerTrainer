@@ -201,7 +201,7 @@ export const terms = {
   },
   styleLag: {
     id: "styleLag",
-    simple: "Joueur large et agressif",
+    simple: "Large et agressif",
     poker: "LAG",
     tip: "Joue beaucoup de mains et met souvent la pression.",
   },
@@ -293,7 +293,11 @@ export const ui = {
   showPotOdds: "Prix pour suivre",
   showCoach: "Conseil",
   showLog: "Historique",
-  revealStyles: "Révéler les styles",
+  revealStyles: "Afficher le niveau et le style des bots",
+  revealStylesHint:
+    "Désactivé, tu dois deviner leur profil grâce à leurs stats.",
+  equityVsRange: (vsRange: string, vsRandom: string) =>
+    `${vsRange} contre ses mains probables, ${vsRandom} contre une main au hasard`,
   fourColor: "Cartes 4 couleurs",
   theme: "Thème",
   themeDark: "Sombre",

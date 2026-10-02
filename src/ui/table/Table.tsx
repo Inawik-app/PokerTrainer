@@ -95,6 +95,7 @@ export function Table() {
   const gameState = useGameStore((s) => s.gameState);
   const heroId = useGameStore((s) => s.heroId);
   const botConfigs = useGameStore((s) => s.botConfigs);
+  const botSetup = useGameStore((s) => s.botSetup);
   const events = useGameStore((s) => s.events);
   const reduce = useReducedMotion();
   const { mode } = useVocab();
@@ -301,8 +302,12 @@ export function Table() {
                   isHero={isHero}
                   visualState={visualState}
                   handId={gameState.handNumber}
-                  styleCode={cfg?.style}
-                  difficulty={cfg?.difficulty}
+                  styleCode={
+                    botSetup.revealBotProfiles ? cfg?.style : undefined
+                  }
+                  difficulty={
+                    botSetup.revealBotProfiles ? cfg?.difficulty : undefined
+                  }
                   actionBubble={bubble}
                   actionBubbleFresh={fresh}
                   winnerAmount={winnerPayouts[player.id] ?? null}

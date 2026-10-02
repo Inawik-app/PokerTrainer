@@ -14,9 +14,12 @@ import { createRng, resolveGameSeed, type Rng } from "@/lib/rng";
 import {
   decideAction,
   type BotConfig,
-  type BotDifficulty,
-  type BotStyle,
 } from "@/bots";
+import {
+  assignBotConfigs,
+  DEFAULT_BOT_SETUP,
+  type BotSetupSettings,
+} from "./botSetup";
 
 export type GamePhase = "idle" | "playing" | "handOver";
 
@@ -31,17 +34,9 @@ export type GameSettings = {
   manualSeed: number | null;
 };
 
-const STYLES: BotStyle[] = [
-  "TAG",
-  "LAG",
-  "TIGHT_PASSIVE",
-  "LOOSE_PASSIVE",
-  "FISH",
-];
-const DIFFS: BotDifficulty[] = ["EASY", "MEDIUM", "HARD"];
-
 type Store = {
   settings: GameSettings;
+  botSetup: BotSetupSettings;
   /** Seed actually used for the current (or last) game. */
   gameSeed: number | null;
   gameState: GameState | null;
@@ -52,6 +47,7 @@ type Store = {
   rng: Rng | null;
   botTimer: ReturnType<typeof setTimeout> | null;
   setSettings: (partial: Partial<GameSettings>) => void;
+  setBotSetup: (partial: Partial<BotSetupSettings>) => void;
   startGame: () => void;
   humanAction: (action: Action) => void;
   nextHand: () => void;
@@ -138,6 +134,7 @@ export const useGameStore = create<Store>((set, get) => ({
     botDelayMax: 1200,
     manualSeed: null,
   },
+  botSetup: { ...DEFAULT_BOT_SETUP },
   gameSeed: null,
   gameState: null,
   events: [],
@@ -156,26 +153,24 @@ export const useGameStore = create<Store>((set, get) => ({
   setSettings: (partial) =>
     set({ settings: { ...get().settings, ...partial } }),
 
+  setBotSetup: (partial) =>
+    set({ botSetup: { ...get().botSetup, ...partial } }),
+
   startGame: () => {
-    const { settings, heroId, clearBotTimer } = get();
+    const { settings, botSetup, heroId, clearBotTimer } = get();
     clearBotTimer();
     const seed = resolveGameSeed(settings.manualSeed);
     const rng = createRng(seed);
-    const configs: Record<string, BotConfig> = {};
+    const configs = assignBotConfigs(settings.botCount, botSetup, rng);
     const players = [
       { id: heroId, name: "Vous", stack: settings.startingStack },
     ];
     for (let i = 1; i <= settings.botCount; i += 1) {
-      const id = `bot${i}`;
       players.push({
-        id,
+        id: `bot${i}`,
         name: `Bot ${i}`,
         stack: settings.startingStack,
       });
-      configs[id] = {
-        style: STYLES[rng.int(STYLES.length)]!,
-        difficulty: DIFFS[rng.int(DIFFS.length)]!,
-      };
     }
     let state = createInitialState(
       players,

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Table } from "@/ui/table/Table";
 import { ActionBar } from "@/ui/controls/ActionBar";
 import { SettingsDialog } from "@/ui/controls/SettingsDialog";
+import { GameSetupPanel } from "@/ui/controls/GameSetupPanel";
 import { OddsPanel } from "@/ui/panels/OddsPanel";
 import { ActionLog } from "@/ui/panels/ActionLog";
 import { VocabProvider } from "@/ui/hooks/useVocab";
@@ -26,26 +27,29 @@ function GameScreenInner() {
 
   if (phase === "idle") {
     return (
-      <main className="flex h-dvh flex-col items-center justify-center gap-8 overflow-hidden bg-surface px-6">
-        <div className="text-center">
-          <h1 className="font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl">
-            {ui.appTitle}
-          </h1>
-          <p className="mt-3 max-w-md text-text-muted">
-            {ui.appTagline(settings.botCount)}
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button size="lg" onClick={startGame}>
-            {ui.newGame}
-          </Button>
-          <SettingsDialog />
-          <Link
-            href="/regles"
-            className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm text-text"
-          >
-            {ui.rules}
-          </Link>
+      <main className="flex h-dvh flex-col overflow-y-auto bg-surface px-6 py-8">
+        <div className="mx-auto flex w-full max-w-3xl flex-col items-center gap-8">
+          <div className="text-center">
+            <h1 className="font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl">
+              {ui.appTitle}
+            </h1>
+            <p className="mt-3 max-w-md text-text-muted">
+              {ui.appTagline(settings.botCount)}
+            </p>
+          </div>
+          <GameSetupPanel />
+          <div className="flex flex-wrap items-center justify-center gap-3">
+            <Button size="lg" onClick={startGame}>
+              {ui.newGame}
+            </Button>
+            <SettingsDialog />
+            <Link
+              href="/regles"
+              className="inline-flex h-10 items-center rounded-lg border border-border px-4 text-sm text-text"
+            >
+              {ui.rules}
+            </Link>
+          </div>
         </div>
       </main>
     );

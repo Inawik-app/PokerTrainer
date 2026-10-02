@@ -215,7 +215,7 @@ export function OddsPanel() {
       </div>
 
       <CoachPanel
-        equity={eq}
+        equityVsRandom={eq}
         toCall={toCall}
         pot={pot}
         outsCount={outs.length}

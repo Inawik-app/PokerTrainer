@@ -1,6 +1,10 @@
 import { PlayingCard } from "@/ui/cards/PlayingCard";
 import { parseCard } from "@/engine/cards";
 import { glossary } from "@/content/glossary";
+import {
+  BotLevelsSection,
+  PlayerProfilesSection,
+} from "@/ui/rules/ProfilesAndLevels";
 import Link from "next/link";
 
 const COMBOS: { name: string; cards: string[] }[] = [
@@ -72,28 +76,9 @@ export default function ReglesPage() {
         </ul>
       </section>
 
-      <section className="space-y-3">
-        <h2 className="text-xl font-semibold">Reconnaître un profil</h2>
-        <ul className="space-y-2 text-text-muted">
-          <li>
-            <strong className="text-text">TAG</strong> — joue peu, relance fort.
-          </li>
-          <li>
-            <strong className="text-text">LAG</strong> — pression permanente.
-          </li>
-          <li>
-            <strong className="text-text">Rock</strong> — très serré, rarement de
-            bluff.
-          </li>
-          <li>
-            <strong className="text-text">Calling station</strong> — suit trop.
-          </li>
-          <li>
-            <strong className="text-text">Fish</strong> — erreurs de taille et de
-            lecture.
-          </li>
-        </ul>
-      </section>
+      <PlayerProfilesSection />
+
+      <BotLevelsSection />
 
       <section className="space-y-3">
         <h2 className="text-xl font-semibold">Glossaire</h2>
