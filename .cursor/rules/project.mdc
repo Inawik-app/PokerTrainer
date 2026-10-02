@@ -1,0 +1,35 @@
+---
+description: Règles du projet Poker Trainer
+alwaysApply: true
+---
+
+# Projet
+Simulateur de Texas Hold'em No-Limit pour débutants, 100 % client, déployé sur Vercel.
+Le joueur affronte 1 à 5 bots et voit ses probabilités, la cote du pot, un log et des conseils.
+Interface en français. Code, noms de variables et commentaires en anglais.
+
+# Stack
+Next.js App Router, TypeScript strict, Tailwind, shadcn/ui, Framer Motion, Zustand, Vitest.
+Pas de backend, pas de base de données, pas de dépendance ajoutée sans le justifier.
+
+# Architecture (dépendances dans un seul sens)
+- src/engine : moteur pur. Aucun import de React, du store ou de l'UI. Fonctions pures (state, action) => state.
+- src/odds : calculs de probabilités purs. Peut importer engine.
+- src/bots : décision des bots. Reçoit une PlayerView (jamais les cartes des autres). Peut importer engine et odds.
+- src/coach : conseils. Peut importer engine et odds.
+- src/store : Zustand, orchestre le reste. Seul endroit avec des effets (timers, worker).
+- src/ui : composants React. Lit le store, envoie des actions. Aucune règle de poker ici.
+- src/theme/tokens.css : seule source des couleurs, ombres, rayons, polices.
+
+# Conventions
+- Montants en jetons entiers (number), jamais de flottants pour l'argent.
+- Toute aléatoire passe par src/lib/rng.ts (RNG à graine) pour rendre les mains rejouables.
+- Le moteur émet des GameEvent typés ; log, sons et animations consomment ces événements.
+- Composants courts (< 150 lignes), un composant par fichier, props typées.
+- Dans l'UI, aucune couleur en dur : uniquement les classes Tailwind mappées sur les tokens.
+- Tout code de engine, odds et bots est couvert par des tests Vitest.
+
+# Façon de travailler
+- Ne modifier que les fichiers concernés par l'étape demandée.
+- Ne pas changer un type exporté sans le signaler explicitement.
+- À la fin : npm test et npm run build doivent passer, puis résumer les fichiers créés ou modifiés.

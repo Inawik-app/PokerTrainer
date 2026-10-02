@@ -1,0 +1,187 @@
+/* Poker Trainer — private modern club
+   Sole source for colors, shadows, radii, and font roles.
+   Themes via data-theme on <html>. Default: dark. */
+
+:root,
+[data-theme="dark"] {
+  /* Anthracite surfaces */
+  --surface: #121416;
+  --surface-2: #1a1d21;
+  --surface-3: #24282e;
+  --surface-elevated: #2a2f36;
+
+  /* Felt — deep green */
+  --felt: #0c2f24;
+  --felt-mid: #145239;
+  --felt-deep: #071a14;
+  --felt-edge: #0a241c;
+  --felt-highlight: #1a6b4a;
+
+  /* Table rail — dark wood / leather */
+  --table-rail: #2a1f16;
+  --table-rail-inner: #3d2e22;
+  --table-rail-highlight: #5a4330;
+
+  /* Text */
+  --text: #f2f0ea;
+  --text-muted: #9a958c;
+  --text-subtle: #6e6a63;
+
+  /* Discreet gold accents */
+  --gold: #c9a227;
+  --gold-muted: #8a7020;
+  --gold-soft: color-mix(in srgb, var(--gold) 22%, transparent);
+
+  /* Status */
+  --success: #3d9a6a;
+  --warning: #d4a017;
+  --danger: #c44b4b;
+
+  /* Playing cards */
+  --card-face: #faf8f5;
+  --card-face-ink: #1a1d21;
+  --card-back: #1a2740;
+  --card-back-pattern: #2a3f5c;
+  --card-back-accent: #c9a227;
+  --card-border: #d4cfc4;
+
+  /* 4-color suits */
+  --suit-spade: #1a1d21;
+  --suit-heart: #c44b4b;
+  --suit-diamond: #2b6cb0;
+  --suit-club: #2d7a52;
+
+  /* Classic 2-color (for fourColor=false) */
+  --suit-red: #c44b4b;
+  --suit-black: #1a1d21;
+
+  /* Chips */
+  --chip-white: #e8e4d9;
+  --chip-red: #b83a3a;
+  --chip-blue: #2a4a7a;
+  --chip-green: #2d6b4f;
+  --chip-black: #1a1d21;
+  --chip-edge: #0f1114;
+  --chip-1: var(--chip-white);
+
+  /* Radii */
+  --radius: 0.75rem;
+  --radius-card: 0.375rem;
+  --radius-pill: 9999px;
+
+  /* Shadows */
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.4);
+  --shadow-table: 0 16px 48px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  --shadow-seat: 0 6px 20px rgba(0, 0, 0, 0.35);
+  --shadow-pulse-gold: 0 0 0 0 color-mix(in srgb, var(--gold) 55%, transparent);
+
+  /* Felt texture (subtle noise via layered gradients — token colors only) */
+  --felt-texture:
+    radial-gradient(
+      ellipse 70% 55% at 50% 42%,
+      var(--felt-mid) 0%,
+      var(--felt) 48%,
+      var(--felt-deep) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--felt-deep) 35%, transparent) 2px,
+      color-mix(in srgb, var(--felt-deep) 35%, transparent) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--felt-highlight) 8%, transparent) 2px,
+      color-mix(in srgb, var(--felt-highlight) 8%, transparent) 3px
+    );
+
+  /* Font roles — values injected by next/font on <html> */
+  --font-ui: var(--font-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-display-family: var(--font-display), ui-serif, Georgia, serif;
+}
+
+[data-theme="light"] {
+  --surface: #f5f3ee;
+  --surface-2: #ebe7df;
+  --surface-3: #ddd8ce;
+  --surface-elevated: #ffffff;
+
+  --felt: #1a5c45;
+  --felt-mid: #247a5a;
+  --felt-deep: #124433;
+  --felt-edge: #0f3a2c;
+  --felt-highlight: #2d9a6e;
+
+  --table-rail: #3d2e22;
+  --table-rail-inner: #5a4330;
+  --table-rail-highlight: #7a5c42;
+
+  --text: #1a1d21;
+  --text-muted: #6b6760;
+  --text-subtle: #9a958c;
+
+  --gold: #a8841a;
+  --gold-muted: #7a6414;
+  --gold-soft: color-mix(in srgb, var(--gold) 18%, transparent);
+
+  --success: #2d7a52;
+  --warning: #b8860b;
+  --danger: #a83a3a;
+
+  --card-face: #ffffff;
+  --card-face-ink: #1a1d21;
+  --card-back: #1a2740;
+  --card-back-pattern: #2a3f5c;
+  --card-back-accent: #a8841a;
+  --card-border: #c8c3b8;
+
+  --suit-spade: #1a1d21;
+  --suit-heart: #a83a3a;
+  --suit-diamond: #1e5a9a;
+  --suit-club: #2d7a52;
+  --suit-red: #a83a3a;
+  --suit-black: #1a1d21;
+
+  --chip-white: #f5f3ee;
+  --chip-red: #a83a3a;
+  --chip-blue: #2a4a7a;
+  --chip-green: #2d6b4f;
+  --chip-black: #1a1d21;
+  --chip-edge: #2a2d32;
+  --chip-1: var(--chip-black);
+
+  --radius: 0.75rem;
+  --radius-card: 0.375rem;
+  --radius-pill: 9999px;
+
+  --shadow-card: 0 4px 16px rgba(0, 0, 0, 0.12);
+  --shadow-table: 0 12px 36px rgba(0, 0, 0, 0.25);
+  --shadow-seat: 0 4px 14px rgba(0, 0, 0, 0.12);
+  --shadow-pulse-gold: 0 0 0 0 color-mix(in srgb, var(--gold) 40%, transparent);
+
+  --felt-texture:
+    radial-gradient(
+      ellipse 70% 55% at 50% 42%,
+      var(--felt-mid) 0%,
+      var(--felt) 48%,
+      var(--felt-deep) 100%
+    ),
+    repeating-linear-gradient(
+      0deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--felt-deep) 30%, transparent) 2px,
+      color-mix(in srgb, var(--felt-deep) 30%, transparent) 3px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 2px,
+      color-mix(in srgb, var(--felt-highlight) 10%, transparent) 2px,
+      color-mix(in srgb, var(--felt-highlight) 10%, transparent) 3px
+    );
+}
