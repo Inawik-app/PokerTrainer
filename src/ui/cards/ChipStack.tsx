@@ -1,5 +1,6 @@
 "use client";
 
+import { useId } from "react";
 import type { CSSProperties } from "react";
 import { motion, useReducedMotion } from "framer-motion";
 import { formatChips } from "@/lib/format";
@@ -119,8 +120,9 @@ function ChipDisc({
   size: number;
   style: CSSProperties;
 }) {
+  const reactId = useId();
   const fill = COLOR_VAR[value];
-  const uid = `c${value}-${size}`;
+  const gradId = `${reactId}-lit`;
   return (
     <svg
       width={size}
@@ -131,13 +133,13 @@ function ChipDisc({
       aria-hidden
     >
       <defs>
-        <radialGradient id={`${uid}-lit`} cx="35%" cy="30%" r="70%">
+        <radialGradient id={gradId} cx="35%" cy="30%" r="70%">
           <stop offset="0%" stopColor="var(--chip-highlight)" />
           <stop offset="55%" stopColor={fill} />
           <stop offset="100%" stopColor={fill} />
         </radialGradient>
       </defs>
-      <circle cx="20" cy="20" r="19" fill={`url(#${uid}-lit)`} />
+      <circle cx="20" cy="20" r="19" fill={`url(#${gradId})`} />
       <circle
         cx="20"
         cy="20"

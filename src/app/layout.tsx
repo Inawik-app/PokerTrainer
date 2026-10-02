@@ -24,9 +24,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html
       lang="fr"
       data-theme="dark"
-      className={`${inter.variable} ${fraunces.variable} dark h-full antialiased`}
+      className={`${inter.variable} ${fraunces.variable} dark h-dvh overflow-hidden antialiased`}
     >
-      <body className="flex min-h-full flex-col font-sans">
+      <body className="h-dvh overflow-hidden font-sans">
         <TooltipProvider>{children}</TooltipProvider>
       </body>
     </html>

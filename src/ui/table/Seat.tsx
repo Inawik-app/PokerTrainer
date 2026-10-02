@@ -2,9 +2,8 @@
 
 import { useEffect, useState } from "react";
 import type { Card, PlayerState } from "@/engine";
-import { PlayingCard } from "@/ui/cards/PlayingCard";
+import { PlayingCard, cardKey } from "@/ui/cards/PlayingCard";
 import { AnimatedChips } from "@/ui/cards/AnimatedChips";
-import { TermInline } from "@/ui/primitives/Term";
 import { ui, primaryLabel, terms, styleWordingKey } from "@/content/wording";
 import { useVocab } from "@/ui/hooks/useVocab";
 import { cn } from "@/lib/utils";
@@ -22,10 +21,8 @@ type Props = {
   player: PlayerState;
   isHero: boolean;
   visualState: SeatVisualState;
-  isButton: boolean;
-  isSB: boolean;
-  isBB: boolean;
   showCards: boolean;
+  handId: number;
   styleCode?: string;
   difficulty?: string;
   actionBubble?: string | null;
@@ -37,10 +34,8 @@ export function Seat({
   player,
   isHero,
   visualState,
-  isButton,
-  isSB,
-  isBB,
   showCards,
+  handId,
   styleCode,
   difficulty,
   actionBubble,
@@ -58,7 +53,7 @@ export function Seat({
       return () => clearTimeout(t);
     }
     setShowWinner(false);
-  }, [visualState, winnerAmount, player.id]);
+  }, [visualState, winnerAmount, player.id, handId]);
 
   const folded = visualState === "folded";
   const eliminated = visualState === "eliminated";
@@ -73,12 +68,32 @@ export function Seat({
 
   const turnLabel = isHero ? ui.labelYourTurn : ui.labelTheirTurn;
 
+  const bg = eliminated
+    ? "var(--seat-eliminated-bg)"
+    : folded
+      ? "var(--seat-folded-bg)"
+      : "var(--seat-active-bg)";
+  const fg = eliminated
+    ? "var(--seat-eliminated-text)"
+    : folded
+      ? "var(--seat-folded-text)"
+      : "var(--seat-active-text)";
+
+  // Hero cards live in the action bar — bots keep mini cards in the seat.
+  const showSeatCards = !isHero && !folded && !eliminated;
+  const revealed = showCards && player.holeCards.length > 0;
+  const slots: (Card | null)[] = showSeatCards
+    ? revealed
+      ? player.holeCards
+      : [null, null]
+    : [];
+
   return (
     <div className="relative flex flex-col items-center">
       <AnimatePresence>
         {actionBubble && (
           <motion.div
-            key={actionBubble + String(actionBubbleFresh)}
+            key={`${handId}-${actionBubble}-${actionBubbleFresh}`}
             initial={reduce ? false : { opacity: 0, y: 6, scale: 0.9 }}
             animate={{
               opacity: actionBubbleFresh ? 1 : 0.75,
@@ -100,77 +115,48 @@ export function Seat({
         )}
       </AnimatePresence>
 
-      <motion.div
-        animate={
-          acting && !reduce
-            ? {
-                boxShadow: [
-                  "0 0 0 0 var(--seat-acting-glow)",
-                  "0 0 0 10px transparent",
-                ],
-              }
-            : winner && !reduce
-              ? {
-                  boxShadow: [
-                    "0 0 0 0 var(--seat-winner-halo)",
-                    "0 0 24px 4px var(--seat-winner-halo)",
-                    "0 0 0 0 var(--seat-winner-halo)",
-                  ],
-                }
-              : undefined
-        }
-        transition={
-          acting && !reduce
-            ? { repeat: Infinity, duration: 1.35, ease: "easeInOut" }
-            : winner && !reduce
-              ? { duration: 1.2, repeat: 1 }
-              : undefined
-        }
-        className={cn(
-          "flex min-w-[7.5rem] flex-col items-center gap-1 rounded-xl bg-surface-2/90 px-3 py-2 text-center shadow-card transition-[filter,opacity]",
-          acting && "ring-2",
-          allIn && "ring-2",
-          winner && "ring-2",
-          folded && "grayscale",
-          eliminated && "grayscale",
-        )}
+      {acting && (
+        <span
+          className="absolute -top-3 z-10 rounded-full px-2 py-0.5 text-[10px] font-bold text-surface shadow-card"
+          style={{ background: "var(--seat-badge-turn)" }}
+        >
+          {turnLabel}
+        </span>
+      )}
+
+      <div
+        className="relative flex min-w-[7.5rem] flex-col items-center gap-1 rounded-xl px-3 py-2 text-center shadow-card"
         style={{
+          background: bg,
+          color: fg,
           opacity: eliminated
             ? "var(--seat-eliminated-opacity)"
             : folded
               ? "var(--seat-folded-opacity)"
               : 1,
-          ...(acting
-            ? { ["--tw-ring-color" as string]: "var(--seat-acting-ring)" }
-            : {}),
-          ...(allIn && !acting
-            ? { ["--tw-ring-color" as string]: "var(--seat-badge-allin)" }
-            : {}),
-          ...(winner
-            ? { ["--tw-ring-color" as string]: "var(--seat-acting-ring)" }
-            : {}),
+          borderWidth: acting ? 3 : 1,
+          borderStyle: "solid",
+          borderColor: acting
+            ? "var(--seat-acting-ring)"
+            : isHero
+              ? "var(--seat-hero-rim)"
+              : "var(--seat-idle-border)",
+          boxShadow: acting
+            ? "0 0 0 3px var(--seat-acting-glow), var(--shadow-seat)"
+            : winner
+              ? "0 0 18px 2px var(--seat-winner-halo)"
+              : "var(--shadow-seat)",
+          filter: folded || eliminated ? "grayscale(0.35)" : undefined,
         }}
       >
         <div className="flex flex-wrap items-center justify-center gap-1 text-[10px]">
-          {isButton && (
-            <span className="rounded bg-gold px-1 font-bold text-surface">
-              <TermInline id="button">D</TermInline>
-            </span>
-          )}
-          {isSB && (
-            <span className="rounded bg-surface px-1 text-text-muted">
-              <TermInline id="smallBlind">SB</TermInline>
-            </span>
-          )}
-          {isBB && (
-            <span className="rounded bg-surface px-1 text-text-muted">
-              <TermInline id="bigBlind">BB</TermInline>
-            </span>
-          )}
           {folded && (
             <span
-              className="rounded px-1.5 py-0.5 font-semibold uppercase tracking-wide text-text"
-              style={{ background: "var(--seat-badge-folded)" }}
+              className="rounded px-1.5 py-0.5 font-semibold uppercase tracking-wide"
+              style={{
+                background: "var(--seat-badge-folded)",
+                color: "var(--seat-active-text)",
+              }}
             >
               {ui.labelFolded}
             </span>
@@ -184,40 +170,23 @@ export function Seat({
             </span>
           )}
           {eliminated && (
-            <span className="rounded bg-surface px-1.5 py-0.5 font-semibold text-text-muted">
+            <span className="rounded bg-surface/30 px-1.5 py-0.5 font-semibold">
               {ui.labelEliminated}
             </span>
           )}
-          {acting && (
-            <span
-              className="rounded px-1.5 py-0.5 font-semibold text-surface"
-              style={{ background: "var(--seat-badge-turn)" }}
-            >
-              {turnLabel}
-            </span>
-          )}
         </div>
 
-        {acting && (
-          <div className="h-1 w-full overflow-hidden rounded-full bg-surface">
-            <motion.div
-              className="h-full origin-left rounded-full"
-              style={{ background: "var(--seat-timer)" }}
-              initial={reduce ? { scaleX: 1 } : { scaleX: 1 }}
-              animate={reduce ? { scaleX: 1 } : { scaleX: 0 }}
-              transition={
-                reduce ? { duration: 0 } : { duration: 1.2, ease: "linear", repeat: Infinity }
-              }
-            />
+        <div className="text-sm font-medium">{player.name}</div>
+        {isHero && (
+          <div
+            className="text-[10px] font-semibold uppercase tracking-wide"
+            style={{ color: "var(--seat-hero-rim)" }}
+          >
+            {ui.youMarker}
           </div>
         )}
-
-        <div className="text-sm font-medium text-text">
-          {player.name}
-          {isHero ? ui.youSuffix : ""}
-        </div>
         {styleText && difficulty && (
-          <div className="text-[10px] text-text-muted">
+          <div className="text-[10px] opacity-70">
             {ui.styleLabel(styleText, difficulty)}
           </div>
         )}
@@ -226,34 +195,35 @@ export function Seat({
           className="text-lg font-semibold text-gold"
         />
 
-        <div className="relative mt-1 flex h-14 items-center justify-center gap-1">
-          <AnimatePresence mode="popLayout">
-            {!folded &&
-              !eliminated &&
-              (showCards ? player.holeCards : [null, null]).map((card, i) => (
-                <motion.div
-                  key={`card-${player.id}-${i}`}
-                  initial={false}
-                  exit={
-                    reduce
-                      ? { opacity: 0 }
-                      : {
-                          opacity: 0,
-                          x: (1 - 2 * i) * 8,
-                          y: -40,
-                          scale: 0.4,
-                        }
-                  }
-                  transition={{ duration: 0.35 }}
-                >
-                  <PlayingCard
-                    card={(card as Card | null) ?? null}
-                    faceDown={!showCards}
-                  />
-                </motion.div>
-              ))}
-          </AnimatePresence>
-        </div>
+        {showSeatCards && (
+          <div
+            key={`cards-${handId}-${player.id}`}
+            className="relative mt-1 flex items-center justify-center gap-1"
+            style={{ minHeight: revealed ? 46 : 26 }}
+          >
+            <AnimatePresence mode="popLayout">
+              {slots.map((card, i) => {
+                const faceDown = !revealed;
+                const ck = cardKey(card, faceDown);
+                return (
+                  <motion.div
+                    key={`${handId}-${player.id}-${ck}-${i}`}
+                    initial={reduce ? false : { opacity: 0, scale: 0.85 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={reduce ? { opacity: 0 } : { opacity: 0, y: -20, scale: 0.5 }}
+                    transition={{ duration: 0.25 }}
+                  >
+                    <PlayingCard
+                      card={card}
+                      faceDown={faceDown}
+                      size={revealed ? "sm" : "xs"}
+                    />
+                  </motion.div>
+                );
+              })}
+            </AnimatePresence>
+          </div>
+        )}
 
         <AnimatePresence>
           {showWinner && winnerAmount != null && (
@@ -269,7 +239,7 @@ export function Seat({
             </motion.div>
           )}
         </AnimatePresence>
-      </motion.div>
+      </div>
     </div>
   );
 }

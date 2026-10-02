@@ -242,7 +242,6 @@ export const ui = {
   historyTitle: "Historique",
   copy: "Copier",
   coachTitle: "Conseil",
-  youSuffix: " (toi)",
   playersInHand: (n: number) =>
     n <= 1 ? `${n} joueur en jeu` : `${n} joueurs en jeu`,
   handNumber: (n: number) => `Main n°${n}`,
@@ -268,8 +267,10 @@ export const ui = {
     `Tu paies ${toCall} pour viser ${potWin}, avec ${equityPct} de chances : c'est tout juste.`,
   verdictReasonBad: (toCall: string, potWin: string, equityPct: string) =>
     `Tu paies ${toCall} pour viser ${potWin}, mais tu n'as que ${equityPct} de chances : trop cher.`,
-  labelYourTurn: "À toi de jouer",
-  labelTheirTurn: "À lui de jouer",
+  labelYourTurn: "À toi",
+  labelTheirTurn: "À lui",
+  youMarker: "Toi",
+  youSuffix: "",
   labelFolded: "Couché",
   labelAllIn: "TAPIS",
   labelEliminated: "Éliminé",

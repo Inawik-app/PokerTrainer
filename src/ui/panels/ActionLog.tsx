@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useGameStore } from "@/store";
 import { formatAction, formatChips, streetLabel } from "@/lib/format";
-import { PlayingCard } from "@/ui/cards/PlayingCard";
+import { PlayingCard, cardKey } from "@/ui/cards/PlayingCard";
 import type { GameEvent } from "@/engine";
 import { Button } from "@/components/ui/button";
 import { ui, primaryLabel, terms } from "@/content/wording";
@@ -16,7 +16,8 @@ function playerName(id: string, names: Record<string, string>): string {
 export function ActionLog() {
   const events = useGameStore((s) => s.events);
   const gameState = useGameStore((s) => s.gameState);
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const stickToBottom = useRef(true);
   const { mode } = useVocab();
 
   const names = useMemo(() => {
@@ -25,9 +26,20 @@ export function ActionLog() {
     return map;
   }, [gameState?.players]);
 
+  const handId = gameState?.handNumber ?? 0;
+
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+    const el = listRef.current;
+    if (!el || !stickToBottom.current) return;
+    el.scrollTop = el.scrollHeight;
   }, [events.length]);
+
+  const onScroll = () => {
+    const el = listRef.current;
+    if (!el) return;
+    const dist = el.scrollHeight - el.scrollTop - el.clientHeight;
+    stickToBottom.current = dist < 48;
+  };
 
   const textExport = useMemo(
     () => formatHandText(events, names, mode),
@@ -35,8 +47,8 @@ export function ActionLog() {
   );
 
   return (
-    <div className="flex h-full flex-col gap-2">
-      <div className="flex items-center justify-between">
+    <div className="flex h-full min-h-0 flex-col gap-2">
+      <div className="flex shrink-0 items-center justify-between">
         <h2 className="text-sm font-semibold text-text">{ui.historyTitle}</h2>
         <Button
           variant="outline"
@@ -46,11 +58,20 @@ export function ActionLog() {
           {ui.copy}
         </Button>
       </div>
-      <div className="flex-1 space-y-2 overflow-y-auto text-sm">
+      <div
+        ref={listRef}
+        onScroll={onScroll}
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto overscroll-contain text-sm"
+      >
         {events.map((e, i) => (
-          <LogLine key={i} event={e} names={names} mode={mode} />
+          <LogLine
+            key={`${handId}-${e.type}-${i}`}
+            event={e}
+            names={names}
+            mode={mode}
+            handId={handId}
+          />
         ))}
-        <div ref={bottomRef} />
       </div>
     </div>
   );
@@ -60,10 +81,12 @@ function LogLine({
   event,
   names,
   mode,
+  handId,
 }: {
   event: GameEvent;
   names: Record<string, string>;
   mode: "simple" | "poker";
+  handId: number;
 }) {
   switch (event.type) {
     case "HAND_STARTED":
@@ -89,7 +112,11 @@ function LogLine({
           </span>
           <div className="flex gap-1">
             {event.cards.map((c, i) => (
-              <PlayingCard key={i} card={c} size="sm" />
+              <PlayingCard
+                key={`${handId}-${event.street}-${cardKey(c, false)}-${i}`}
+                card={c}
+                size="sm"
+              />
             ))}
           </div>
         </div>

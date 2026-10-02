@@ -1,12 +1,18 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
+import {
+  AnimatePresence,
+  LayoutGroup,
+  motion,
+  useReducedMotion,
+} from "framer-motion";
 import { computePots, type GameEvent } from "@/engine";
 import { useGameStore } from "@/store";
 import { Board } from "./Board";
 import { Pot } from "./Pot";
 import { Seat, type SeatVisualState } from "./Seat";
+import { TableMarker } from "./TableMarker";
 import { ChipStack } from "@/ui/cards/ChipStack";
 import { formatAction, formatChips, streetLabel } from "@/lib/format";
 import { ui } from "@/content/wording";
@@ -26,9 +32,16 @@ const POSITIONS: { left: string; top: string }[] = [
 function betPosition(seat: { left: string; top: string }) {
   const lx = parseFloat(seat.left);
   const ty = parseFloat(seat.top);
+  return { left: `${(lx + 50) / 2}%`, top: `${(ty + 50) / 2}%` };
+}
+
+/** Between seat and bet zone. */
+function markerPosition(seat: { left: string; top: string }) {
+  const lx = parseFloat(seat.left);
+  const ty = parseFloat(seat.top);
   return {
-    left: `${(lx + 50) / 2}%`,
-    top: `${(ty + 50) / 2}%`,
+    left: `${lx * 0.62 + 50 * 0.38}%`,
+    top: `${ty * 0.62 + 50 * 0.38}%`,
   };
 }
 
@@ -158,6 +171,8 @@ export function Table() {
 
   const inHandCount = players.filter((p) => p.status !== "folded").length;
   const now = Date.now();
+  const sbAmount = gameState.config.smallBlind;
+  const bbAmount = gameState.config.bigBlind;
 
   const streetTermId =
     gameState.street === "preflop"
@@ -171,7 +186,8 @@ export function Table() {
             : "showdown";
 
   return (
-    <div className="relative mx-auto aspect-[16/10] w-full max-w-4xl">
+    <LayoutGroup id="table-markers">
+    <div className="relative mx-auto aspect-[16/10] w-full max-w-5xl">
       <div
         className="absolute inset-[8%] rounded-[50%] border-8 shadow-card"
         style={{
@@ -190,7 +206,7 @@ export function Table() {
         <p className="text-xs font-medium text-text-muted">
           {ui.playersInHand(inHandCount)}
         </p>
-        <Board cards={gameState.board} />
+        <Board cards={gameState.board} handId={gameState.handNumber} />
         <div className="text-xs text-text-muted">
           <TermInline id={streetTermId}>
             {streetLabel(gameState.street, mode)}
@@ -201,6 +217,7 @@ export function Table() {
       {ordered.map((player, i) => {
         const pos = POSITIONS[i] ?? POSITIONS[0]!;
         const betPos = betPosition(pos);
+        const markPos = markerPosition(pos);
         const faceUp =
           player.id === heroId ||
           gameState.street === "showdown" ||
@@ -214,6 +231,9 @@ export function Table() {
         );
         const bubble = actionText[player.id] ?? null;
         const fresh = (freshUntil.current[player.id] ?? 0) > now;
+        const isBtn = player.seat === gameState.buttonSeat;
+        const isSB = player.seat === sbSeat;
+        const isBB = player.seat === bbSeat;
 
         return (
           <div key={player.id}>
@@ -225,9 +245,7 @@ export function Table() {
                 player={player}
                 isHero={player.id === heroId}
                 visualState={visualState}
-                isButton={player.seat === gameState.buttonSeat}
-                isSB={player.seat === sbSeat}
-                isBB={player.seat === bbSeat}
+                handId={gameState.handNumber}
                 showCards={
                   faceUp &&
                   player.holeCards.length > 0 &&
@@ -241,6 +259,19 @@ export function Table() {
                 winnerAmount={winnerPayouts[player.id] ?? null}
               />
             </div>
+
+            {(isBtn || isSB || isBB) && (
+              <div
+                className="absolute z-10 -translate-x-1/2 -translate-y-1/2"
+                style={{ left: markPos.left, top: markPos.top }}
+              >
+                <div className="flex items-center gap-1">
+                  {isBtn && <TableMarker kind="dealer" />}
+                  {isSB && <TableMarker kind="sb" amount={sbAmount} />}
+                  {isBB && <TableMarker kind="bb" amount={bbAmount} />}
+                </div>
+              </div>
+            )}
 
             <AnimatePresence>
               {player.betStreet > 0 && visualState !== "eliminated" && (
@@ -274,5 +305,6 @@ export function Table() {
         );
       })}
     </div>
+    </LayoutGroup>
   );
 }

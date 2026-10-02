@@ -26,7 +26,7 @@ function GameScreenInner() {
 
   if (phase === "idle") {
     return (
-      <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-surface px-6">
+      <main className="flex h-dvh flex-col items-center justify-center gap-8 overflow-hidden bg-surface px-6">
         <div className="text-center">
           <h1 className="font-display text-4xl font-semibold tracking-tight text-text sm:text-5xl">
             {ui.appTitle}
@@ -52,8 +52,8 @@ function GameScreenInner() {
   }
 
   return (
-    <main className="flex min-h-full flex-1 flex-col bg-surface">
-      <header className="flex items-center justify-between border-b border-border px-4 py-3">
+    <main className="flex h-dvh flex-col overflow-hidden bg-surface">
+      <header className="flex shrink-0 items-center justify-between border-b border-border px-4 py-3">
         <h1 className="font-display text-lg font-semibold text-text">
           {ui.appTitle}
         </h1>
@@ -70,23 +70,31 @@ function GameScreenInner() {
           </Button>
         </div>
       </header>
-      <div className="flex flex-1 flex-col lg:flex-row">
-        <div className="flex flex-1 items-center justify-center p-4">
+
+      <div className="flex min-h-0 flex-1 flex-col lg:flex-row">
+        <div className="flex min-h-0 min-w-0 flex-1 items-center justify-center overflow-hidden p-3">
           <Table />
         </div>
-        <aside className="flex max-h-[50vh] w-full flex-col gap-4 overflow-y-auto border-t border-border bg-surface-2 p-4 lg:max-h-none lg:w-[360px] lg:shrink-0 lg:border-l lg:border-t-0">
-          <section data-panel="odds">
+
+        <aside className="flex max-h-[42vh] w-full shrink-0 flex-col border-t border-border bg-surface-2 lg:max-h-none lg:h-full lg:w-[360px] lg:border-l lg:border-t-0">
+          <section
+            data-panel="odds"
+            className="max-h-[45%] shrink-0 overflow-y-auto border-b border-border p-4 lg:max-h-[50%]"
+          >
             <OddsPanel />
           </section>
           <section
             data-panel="log"
-            className="min-h-[180px] flex-1 border-t border-border pt-4"
+            className="flex min-h-0 flex-1 flex-col p-4 pt-3"
           >
             <ActionLog />
           </section>
         </aside>
       </div>
-      <ActionBar />
+
+      <div className="shrink-0">
+        <ActionBar />
+      </div>
     </main>
   );
 }

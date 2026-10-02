@@ -32,18 +32,58 @@
   --gold-muted: #8a7020;
   --gold-soft: color-mix(in srgb, var(--gold) 22%, transparent);
 
+  --success: #3d9a68;
+  --warning: #d4a017;
+  --danger: #c44b4b;
+
+  /* Table markers (D / PB / GB) */
+  --marker-dealer-bg: #f2f0ea;
+  --marker-dealer-ink: #1a1d21;
+  --marker-sb-bg: #7eb6e0;
+  --marker-sb-ink: #0c1e30;
+  --marker-bb-bg: #c9a227;
+  --marker-bb-ink: #1a1d21;
+
+  /* Bet zone track */
+  --zone-good: #2f8f5b;
+  --zone-aggressive: #d4782a;
+  --zone-risky: #c44b4b;
+  --zone-cautious: #6b8a9e;
+
+  /* Action bar buttons (text/bg ≥ 4.5:1) */
+  --btn-fold-bg: #8b3535;
+  --btn-fold-text: #faf8f5;
+  --btn-check-bg: #2a5f96;
+  --btn-check-text: #f2f7fc;
+  --btn-bet-bg: #c9a227;
+  --btn-bet-text: #1a1d21;
+  --btn-allin-bg: #e07020;
+  --btn-allin-text: #1a1d21;
+  --action-bar-bg: #1a1d21;
+  --action-bar-border: color-mix(in srgb, var(--text) 18%, transparent);
+  --action-bar-stack: var(--gold);
+  --slider-bubble-bg: var(--surface-elevated);
+  --slider-bubble-text: var(--text);
+
   /* Seat status */
   --seat-acting-ring: var(--gold);
-  --seat-acting-glow: color-mix(in srgb, var(--gold) 45%, transparent);
-  --seat-folded-opacity: 0.4;
-  --seat-eliminated-opacity: 0.28;
+  --seat-acting-glow: color-mix(in srgb, var(--gold) 35%, transparent);
+  --seat-idle-border: color-mix(in srgb, var(--text) 18%, transparent);
+  --seat-active-bg: #1a3a5c;
+  --seat-active-text: #e8f0f8;
+  --seat-folded-bg: #3a3d42;
+  --seat-folded-text: #b0b0b0;
+  --seat-eliminated-bg: #2a2c30;
+  --seat-eliminated-text: #7a7a7a;
+  --seat-folded-opacity: 0.85;
+  --seat-eliminated-opacity: 0.55;
   --seat-winner-halo: color-mix(in srgb, var(--gold) 55%, transparent);
-  --seat-badge-folded: var(--text-muted);
+  --seat-badge-folded: #5a5e66;
   --seat-badge-allin: var(--warning);
   --seat-badge-turn: var(--gold);
+  --seat-hero-rim: var(--gold);
   --seat-action-bubble-bg: var(--surface-elevated);
   --seat-action-bubble-text: var(--text);
-  --seat-timer: var(--gold);
 
   /* Playing cards */
   --card-face: #faf8f5;
@@ -147,21 +187,54 @@
   --gold-muted: #7a6414;
   --gold-soft: color-mix(in srgb, var(--gold) 18%, transparent);
 
-  --success: #2d7a52;
-  --warning: #b8860b;
+  --success: #1f6b45;
+  --warning: #9a7010;
   --danger: #a83a3a;
+
+  --marker-dealer-bg: #ffffff;
+  --marker-dealer-ink: #1a1d21;
+  --marker-sb-bg: #5ba3d9;
+  --marker-sb-ink: #0a1a2a;
+  --marker-bb-bg: #a8841a;
+  --marker-bb-ink: #1a1d21;
+
+  --zone-good: #1f6b45;
+  --zone-aggressive: #c06020;
+  --zone-risky: #a83a3a;
+  --zone-cautious: #5a7a8e;
+
+  --btn-fold-bg: #a83a3a;
+  --btn-fold-text: #ffffff;
+  --btn-check-bg: #1e5a9a;
+  --btn-check-text: #ffffff;
+  --btn-bet-bg: #8a7018;
+  --btn-bet-text: #ffffff;
+  --btn-allin-bg: #a85018;
+  --btn-allin-text: #ffffff;
+  --action-bar-bg: #ebe7df;
+  --action-bar-border: color-mix(in srgb, var(--text) 16%, transparent);
+  --action-bar-stack: #8a7018;
+  --slider-bubble-bg: var(--surface-elevated);
+  --slider-bubble-text: var(--text);
 
   --seat-acting-ring: var(--gold);
   --seat-acting-glow: color-mix(in srgb, var(--gold) 40%, transparent);
-  --seat-folded-opacity: 0.4;
-  --seat-eliminated-opacity: 0.28;
+  --seat-idle-border: color-mix(in srgb, var(--text) 20%, transparent);
+  --seat-active-bg: #245a8a;
+  --seat-active-text: #f2f7fc;
+  --seat-folded-bg: #c8c4bc;
+  --seat-folded-text: #4a4a4a;
+  --seat-eliminated-bg: #d8d4cc;
+  --seat-eliminated-text: #6a6a6a;
+  --seat-folded-opacity: 0.9;
+  --seat-eliminated-opacity: 0.6;
   --seat-winner-halo: color-mix(in srgb, var(--gold) 45%, transparent);
-  --seat-badge-folded: var(--text-muted);
+  --seat-badge-folded: #8a8680;
   --seat-badge-allin: var(--warning);
   --seat-badge-turn: var(--gold);
+  --seat-hero-rim: var(--gold);
   --seat-action-bubble-bg: var(--surface-elevated);
   --seat-action-bubble-text: var(--text);
-  --seat-timer: var(--gold);
 
   --card-face: #ffffff;
   --card-face-ink: #1a1d21;
