@@ -1,36 +1,45 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Poker Trainer
 
-## Getting Started
+Simulateur de Texas Hold'em No-Limit pour apprendre le poker. Le joueur affronte de 1 à 5 bots et voit en direct ses probabilités de gagner, la cote du pot et des conseils sur chaque décision.
 
-First, run the development server:
+Tout tourne dans le navigateur : pas de backend, pas de base de données.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## Ce que fait l'application
+
+- **Partie complète** : blinds, tours d'enchères, tapis et pots secondaires, abattage.
+- **Bots** avec plusieurs profils de joueur et niveaux de difficulté. Ils ne voient que ce qu'un vrai joueur verrait : jamais les cartes des autres.
+- **Coach** : équité de la main face à la fourchette estimée de l'adversaire, zones de mise conseillées, relecture de la main une fois terminée.
+- **Mains rejouables** : tout l'aléatoire passe par un générateur à graine, donc une main peut être rejouée à l'identique.
+- Page de règles et glossaire pour les débutants.
+
+## Architecture
+
+Les dépendances vont dans un seul sens, ce qui garde le cœur du jeu indépendant de l'interface :
+
+```
+engine  →  odds  →  bots / coach  →  store  →  ui
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Dossier | Rôle |
+| --- | --- |
+| `src/engine` | Règles du poker en fonctions pures `(état, action) => état`. Aucun import React. |
+| `src/odds` | Calcul des probabilités. |
+| `src/bots` | Décisions des bots à partir de la vue du joueur. |
+| `src/coach` | Estimation des fourchettes adverses et conseils. |
+| `src/store` | État global (Zustand), seul endroit avec des effets de bord. |
+| `src/ui` | Composants React, sans aucune règle de poker. |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+Le moteur, les probabilités et les bots sont couverts par des tests Vitest.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Stack
 
-## Learn More
+Next.js (App Router) · TypeScript strict · Tailwind CSS · shadcn/ui · Framer Motion · Zustand · Vitest · Vercel
 
-To learn more about Next.js, take a look at the following resources:
+## Lancer le projet
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+```bash
+npm install
+npm run dev     # http://localhost:3000
+npm test
+npm run build
+```
